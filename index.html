@@ -385,6 +385,15 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 .empty-ico{font-size:36px;opacity:0.3}
 .empty-txt{font-size:11px;color:var(--mid);line-height:1.8}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        integrity="sha384-sEVIly94UBRLKWdkYoPpSG7GD/e79YHMrxVyZaOk712Ga7+EAw6w1EFi+xBzBdd+"
+        crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"
+        integrity="sha384-EkqK+ezBWJuvO3hfrSx2iVqr3YQbhmnzn8kPhOpBZ+0GMVU5oGSgptwIu8D84HjE"
+        crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        integrity="sha384-M481iNZJtbpypKgvlvZ+78Giq0BsewFLk5r2k+MOcGXlwKCc27DQRZ+WCV/zpmpC"
+        crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -595,6 +604,20 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 <input type="file" id="fileInput" accept="image/*">
 
 <script>
+// ════════════════════════════════════════════════════════════
+// FIREBASE
+// ════════════════════════════════════════════════════════════
+firebase.initializeApp({
+  apiKey: "AIzaSyB45pdSTdV98fmrgeDoQgrkcF-Rg9s1xN4",
+  authDomain: "macrolens-app.firebaseapp.com",
+  projectId: "macrolens-app",
+  storageBucket: "macrolens-app.firebasestorage.app",
+  messagingSenderId: "623733101108",
+  appId: "1:623733101108:web:5dd0a777617c95bdfa7061"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 // ════════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════════
