@@ -964,15 +964,9 @@ function setScanStatus(msg, err=false) {
 }
 
 async function callMiniMax(p1, p2, ctx, systemOverride, userOverride) {
-  const sys = systemOverride || `You are a precise nutrition AI. Analyze food images and/or descriptions.
-Return ONLY valid JSON with this exact structure:
-{
-  "foods": [{"name":"...","portion":"...","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],
-  "totals": {"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},
-  "hidden_calories_notes": "...",
-  "confidence": 75
-}
-Be accurate with portions. Account for cooking oil, sauces. Return ONLY JSON.`;
+  const sys = systemOverride || `Nutrition AI. Return ONLY valid JSON:
+{"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":75}
+Accurate portions. Account for oils/sauces. JSON only.`;
 
   const userContent = [];
   if (p1) userContent.push({type:'image_url',image_url:{url:`data:image/jpeg;base64,${p1.split(',')[1]}`}});
@@ -981,7 +975,7 @@ Be accurate with portions. Account for cooking oil, sauces. Return ONLY JSON.`;
   userContent.push({type:'text',text:txt});
 
   const hasImages = !!(p1 || p2);
-  const model = hasImages ? 'MiniMax-VL-01' : 'MiniMax-Text-01';
+  const model = hasImages ? 'MiniMax-VL-01' : 'abab6.5s-chat';
   // Text-only model expects content as a string, not an array
   const userMsg = hasImages ? userContent : userContent.find(c => c.type === 'text').text;
   const gid = G.settings.groupId;
@@ -989,7 +983,7 @@ Be accurate with portions. Account for cooking oil, sauces. Return ONLY JSON.`;
   const res = await fetch(url, {
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.settings.apiKey}`},
-    body: JSON.stringify({model,max_tokens:1200,messages:[{role:'system',content:sys},{role:'user',content:userMsg}]})
+    body: JSON.stringify({model,max_tokens:500,messages:[{role:'system',content:sys},{role:'user',content:userMsg}]})
   });
   if (!res.ok) { const e = await res.text(); throw new Error(`API ${res.status}: ${e.slice(0,150)}`); }
   const data = await res.json();
