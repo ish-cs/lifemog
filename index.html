@@ -701,19 +701,35 @@ async function signOut() {
 // ════════════════════════════════════════════════════════════
 // PERSISTENCE
 // ════════════════════════════════════════════════════════════
-function storageKey(k) { return `ml_${G.user.id}_${k}`; }
-
-function loadUserData() {
-  G.settings = JSON.parse(localStorage.getItem(storageKey('settings')) || '{"calorieGoal":2000,"proteinGoal":150,"apiKey":"","groupId":""}');
-  G.log = JSON.parse(localStorage.getItem(storageKey('log')) || '[]');
+async function loadUserData() {
+  const userRef = db.collection('users').doc(G.user.id);
+  const snap = await userRef.get();
+  if (snap.exists) {
+    const d = snap.data();
+    G.settings = {
+      calorieGoal: d.calorieGoal || 2000,
+      proteinGoal: d.proteinGoal || 150,
+      apiKey: d.apiKey || '',
+      groupId: d.groupId || '',
+    };
+  } else {
+    G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '' };
+    await userRef.set(G.settings);
+  }
+  const mealsSnap = await userRef.collection('meals').orderBy('ts', 'desc').get();
+  G.log = mealsSnap.docs.map(d => d.data());
 }
 
-function saveLog() {
-  localStorage.setItem(storageKey('log'), JSON.stringify(G.log));
+async function saveMeal(meal) {
+  await db.collection('users').doc(G.user.id).collection('meals').doc(meal.id).set(meal);
 }
 
-function saveSettingsStore() {
-  localStorage.setItem(storageKey('settings'), JSON.stringify(G.settings));
+async function removeMealFromDB(mealId) {
+  await db.collection('users').doc(G.user.id).collection('meals').doc(mealId).delete();
+}
+
+async function saveSettingsStore() {
+  await db.collection('users').doc(G.user.id).set(G.settings);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -892,7 +908,7 @@ async function doAnalyze() {
       confidence: result.confidence || 0,
     };
     G.log.unshift(meal);
-    saveLog();
+    await saveMeal(meal);
     setScanStatus('');
     // Clear slots
     clearSlot(0); clearSlot(1);
@@ -998,21 +1014,22 @@ function closeModal() {
   G.editingMealData = null;
 }
 
-function saveMealEdit() {
+async function saveMealEdit() {
   const idx = G.log.findIndex(m => m.id === G.editingMealId);
   if (idx !== -1) {
     G.log[idx] = G.editingMealData;
-    saveLog();
+    await saveMeal(G.editingMealData);
   }
   closeModal();
   renderToday();
   renderCalendar();
 }
 
-function deleteMeal() {
+async function deleteMeal() {
   if (!confirm('Delete this meal?')) return;
-  G.log = G.log.filter(m => m.id !== G.editingMealId);
-  saveLog();
+  const idToDelete = G.editingMealId;
+  G.log = G.log.filter(m => m.id !== idToDelete);
+  await removeMealFromDB(idToDelete);
   closeModal();
   renderToday();
   renderCalendar();
