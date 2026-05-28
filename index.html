@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MacroLens">
+<meta name="theme-color" content="#080808">
+<title>MacroLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+:root {
+  --bg: #080808;
+  --s1: #111;
+  --s2: #181818;
+  --s3: #222;
+  --border: #2c2c2c;
+  --border2: #383838;
+  --lime: #d4f54e;
+  --lime-dim: rgba(212,245,78,0.15);
+  --cyan: #4ef5c8;
+  --orange: #f5904e;
+  --red: #f54e4e;
+  --text: #f2ede6;
+  --mid: #888;
+  --dim: #444;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;height:100%;overflow:hidden}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:200;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:32px;padding:40px;
+}
+.login-logo{font-family:'Playfair Display',serif;font-size:48px;letter-spacing:-1px;text-align:center}
+.login-logo em{color:var(--lime);font-style:italic}
+.login-sub{font-size:11px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase;text-align:center}
+.login-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:16px;
+  padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:340px;
+}
+.login-desc{font-size:12px;color:var(--mid);text-align:center;line-height:1.7}
+#googleBtn{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--text);color:#111;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:opacity 0.2s;
+}
+#googleBtn:active{opacity:0.8}
+.g-icon{width:18px;height:18px}
+
+/* ── SHELL ── */
+#app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative}
+#app.hidden{display:none}
+
+/* ── TOPBAR ── */
+.topbar{
+  padding:calc(var(--safe-t) + 12px) 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:22px;letter-spacing:-0.5px}
+.topbar-logo em{color:var(--lime);font-style:italic}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--border2);
+  object-fit:cover;cursor:pointer;
+  background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.tab{
+  flex:1;padding:12px 0;background:none;border:none;
+  color:var(--dim);font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+  position:relative;transition:color 0.2s;
+}
+.tab.active{color:var(--lime)}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--lime)}
+
+/* ── SCROLL CONTENT ── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.panel{display:none;padding-bottom:calc(var(--safe-b) + 20px)}
+.panel.active{display:block}
+
+/* ── TODAY PANEL ── */
+.today-hero{
+  padding:20px;
+  display:flex;flex-direction:column;gap:20px;
+}
+.ring-row{
+  display:flex;align-items:center;gap:20px;
+  background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:20px;
+}
+.ring-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
+.ring-svg{width:100px;height:100px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--s3);stroke-width:8}
+.ring-fill{fill:none;stroke:var(--lime);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s ease}
+.ring-over{stroke:var(--orange)}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-cal{font-family:'Playfair Display',serif;font-size:22px;color:var(--lime);line-height:1}
+.ring-label{font-size:8px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase;margin-top:3px}
+.ring-meta{flex:1;display:flex;flex-direction:column;gap:8px}
+.ring-goal-row{display:flex;justify-content:space-between;align-items:baseline}
+.ring-goal-label{font-size:10px;color:var(--mid);letter-spacing:0.08em}
+.ring-goal-val{font-size:18px;font-family:'Playfair Display',serif;color:var(--text)}
+.ring-remain{font-size:11px}
+.remain-pos{color:var(--cyan)}
+.remain-neg{color:var(--orange)}
+.macro-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+.macro-pill{
+  background:var(--s1);border:1px solid var(--border);border-radius:10px;
+  padding:12px;display:flex;flex-direction:column;gap:3px;
+  position:relative;overflow:hidden;
+}
+.macro-pill::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--pill-color,var(--border))}
+.macro-pill.p{--pill-color:#60a8f0}
+.macro-pill.c{--pill-color:#f0c04e}
+.macro-pill.f{--pill-color:#f07860}
+.mpill-val{font-family:'Playfair Display',serif;font-size:22px;line-height:1}
+.mpill-label{font-size:9px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase}
+.mpill-unit{font-size:9px;color:var(--dim)}
+
+/* ── MEALS LIST ── */
+.meals-header{
+  padding:0 20px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.meals-title{font-size:10px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase}
+.meal-card{
+  margin:0 20px 10px;
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;cursor:pointer;transition:border-color 0.2s;
+}
+.meal-card:active{border-color:var(--border2)}
+.meal-card-top{
+  padding:14px;display:flex;gap:12px;align-items:center;
+}
+.meal-thumb{
+  width:48px;height:48px;border-radius:10px;
+  object-fit:cover;background:var(--s2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.meal-thumb img{width:100%;height:100%;border-radius:10px;object-fit:cover}
+.meal-info{flex:1;min-width:0}
+.meal-time{font-size:9px;color:var(--mid);letter-spacing:0.1em}
+.meal-foods{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.meal-right{text-align:right;flex-shrink:0}
+.meal-cal{font-family:'Playfair Display',serif;font-size:22px;color:var(--lime);line-height:1}
+.meal-cal-u{font-size:9px;color:var(--mid)}
+
+/* ── SCAN PANEL ── */
+.scan-wrap{padding:20px;display:flex;flex-direction:column;gap:14px}
+.photo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.slot{
+  aspect-ratio:3/4;border-radius:12px;border:1.5px dashed var(--border);
+  background:var(--s1);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.slot.filled{border-color:var(--lime);border-style:solid}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:11px}
+.slot-x{
+  position:absolute;top:7px;right:7px;z-index:2;
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(0,0,0,0.75);color:#fff;
+  font-size:11px;display:flex;align-items:center;justify-content:center;
+}
+.slot-ico{font-size:22px;opacity:0.35}
+.slot-lbl{font-size:9px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase;text-align:center;padding:0 6px}
+.field-label{font-size:9px;color:var(--mid);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px}
+textarea,input[type=text],input[type=password],input[type=number]{
+  width:100%;background:var(--s1);border:1.5px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;
+  padding:11px 13px;outline:none;transition:border-color 0.2s;
+}
+textarea:focus,input:focus{border-color:var(--lime)}
+textarea{resize:none;line-height:1.6}
+textarea::placeholder,input::placeholder{color:var(--dim)}
+.progress-bar{height:2px;background:var(--border);border-radius:2px;overflow:hidden;display:none}
+.progress-bar.on{display:block}
+.progress-fill{height:100%;background:var(--lime);border-radius:2px;animation:prog 1.5s ease-in-out infinite}
+@keyframes prog{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+.status{font-size:10px;color:var(--mid);text-align:center;min-height:14px}
+.status.err{color:var(--red)}
+.btn-primary{
+  width:100%;padding:15px;background:var(--lime);color:#0a0a0a;
+  border:none;border-radius:12px;font-family:'IBM Plex Mono',monospace;
+  font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;transition:opacity 0.2s,transform 0.1s;
+}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+
+/* ── CALENDAR PANEL ── */
+.cal-wrap{padding:20px;display:flex;flex-direction:column;gap:16px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between}
+.cal-month{font-family:'Playfair Display',serif;font-size:22px}
+.cal-arrow{
+  background:var(--s1);border:1px solid var(--border);color:var(--text);
+  width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:border-color 0.2s;
+}
+.cal-arrow:active{border-color:var(--lime)}
+.cal-grid{display:flex;flex-direction:column;gap:4px}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:2px}
+.cal-wd{font-size:9px;color:var(--dim);text-align:center;letter-spacing:0.08em;text-transform:uppercase}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-day{
+  aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;cursor:pointer;
+  position:relative;background:var(--s1);border:1px solid transparent;
+  transition:border-color 0.15s;
+}
+.cal-day.empty{background:transparent;cursor:default;border:none}
+.cal-day.today{border-color:var(--lime)}
+.cal-day.has-data{cursor:pointer}
+.cal-day:active:not(.empty){border-color:var(--border2)}
+.cal-day-num{font-size:11px;color:var(--mid)}
+.cal-day.today .cal-day-num{color:var(--lime);font-weight:500}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:var(--dim)}
+.cal-day.under .cal-dot{background:var(--lime)}
+.cal-day.over .cal-dot{background:var(--orange)}
+.cal-day.way-over .cal-dot{background:var(--red)}
+.cal-day-pct{font-size:7px;color:var(--mid)}
+.cal-legend{display:flex;gap:14px;align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--mid);letter-spacing:0.05em}
+.legend-dot{width:6px;height:6px;border-radius:50%}
+
+/* day detail */
+.day-detail{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:16px;display:none;flex-direction:column;gap:12px;
+}
+.day-detail.visible{display:flex}
+.dd-header{display:flex;justify-content:space-between;align-items:baseline}
+.dd-date{font-family:'Playfair Display',serif;font-size:18px}
+.dd-close{background:none;border:none;color:var(--mid);font-size:16px;cursor:pointer}
+.dd-macros{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.dd-m-val{font-family:'Playfair Display',serif;font-size:16px}
+.dd-m-val.c{color:var(--lime)}
+.dd-m-label{font-size:8px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase}
+.dd-meal{
+  background:var(--s2);border-radius:8px;padding:10px 12px;
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+}
+.dd-meal:active{background:var(--s3)}
+.dd-meal-name{font-size:12px}
+.dd-meal-cal{font-family:'Playfair Display',serif;font-size:16px;color:var(--lime)}
+
+/* ── SETTINGS ── */
+.settings-wrap{padding:20px;display:flex;flex-direction:column;gap:14px}
+.settings-group{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.sg-title{font-size:9px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase;padding:12px 16px 0}
+.sg-row{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.sg-row:last-child{border-bottom:none}
+.sg-label{font-size:9px;color:var(--mid);letter-spacing:0.12em;text-transform:uppercase}
+.sg-row input{border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;background:transparent;font-size:13px}
+.sg-row input:focus{border-bottom-color:var(--lime)}
+.btn-save{
+  width:100%;padding:13px;background:var(--s2);
+  border:1.5px solid var(--lime);border-radius:12px;
+  color:var(--lime);font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:background 0.2s;
+}
+.btn-save:active{background:var(--lime-dim)}
+.btn-danger{
+  width:100%;padding:13px;background:var(--s2);
+  border:1.5px solid var(--red);border-radius:12px;
+  color:var(--red);font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
+}
+.profile-row{
+  display:flex;align-items:center;gap:14px;
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;
+}
+.profile-avatar{width:48px;height:48px;border-radius:50%;border:2px solid var(--border2);object-fit:cover}
+.profile-name{font-size:14px;color:var(--text)}
+.profile-email{font-size:11px;color:var(--mid);margin-top:2px}
+
+/* ── MEAL EDIT MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:150;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);
+  display:none;align-items:flex-end;
+}
+.modal-overlay.open{display:flex}
+.modal-sheet{
+  width:100%;max-width:480px;margin:0 auto;
+  background:var(--s1);border-radius:24px 24px 0 0;border-top:1px solid var(--border);
+  padding:20px 20px calc(20px + var(--safe-b));
+  max-height:85vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:14px;
+  animation:slideup 0.3s ease;
+}
+@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px}
+.modal-foods{display:flex;flex-direction:column;gap:6px}
+.modal-food-row{
+  background:var(--s2);border-radius:10px;padding:11px 13px;
+  display:grid;grid-template-columns:1fr auto auto auto auto;
+  gap:8px;align-items:center;
+}
+.mfr-name{font-size:12px}
+.mfr-val{
+  font-size:11px;color:var(--mid);text-align:right;
+  min-width:32px;
+}
+.mfr-val span{font-family:'Playfair Display',serif;color:var(--text);font-size:13px}
+.modal-totals{
+  background:var(--s2);border-radius:10px;padding:12px 13px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;
+}
+.mt-val{font-family:'Playfair Display',serif;font-size:18px}
+.mt-val.c{color:var(--lime)}
+.mt-label{font-size:8px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase}
+.edit-nl-box{display:flex;flex-direction:column;gap:6px}
+.edit-nl-label{font-size:9px;color:var(--mid);letter-spacing:0.12em;text-transform:uppercase}
+.edit-nl-row{display:flex;gap:8px}
+.edit-nl-row textarea{flex:1;min-height:60px;font-size:12px}
+.btn-nl{
+  padding:11px 14px;background:var(--s2);border:1.5px solid var(--cyan);
+  border-radius:10px;color:var(--cyan);font-family:'IBM Plex Mono',monospace;
+  font-size:11px;cursor:pointer;white-space:nowrap;align-self:flex-end;transition:background 0.2s;
+}
+.btn-nl:active{background:rgba(78,245,200,0.1)}
+.btn-nl:disabled{opacity:0.4;cursor:not-allowed}
+.modal-btn-row{display:flex;gap:8px}
+.btn-modal-save{flex:1;padding:13px;background:var(--lime);color:#0a0a0a;border:none;border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;cursor:pointer}
+.btn-modal-del{padding:13px 16px;background:var(--s2);border:1.5px solid var(--red);border-radius:12px;color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer}
+.btn-modal-close{padding:13px 16px;background:var(--s2);border:1.5px solid var(--border2);border-radius:12px;color:var(--mid);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer}
+
+/* ── CAMERA ── */
+.cam-modal{position:fixed;inset:0;z-index:180;background:#000;display:none;flex-direction:column}
+.cam-modal.open{display:flex}
+#camVideo{flex:1;width:100%;object-fit:cover}
+.cam-controls{
+  padding:20px;padding-bottom:calc(20px + var(--safe-b));
+  display:flex;align-items:center;justify-content:center;gap:36px;background:#000;
+}
+.shutter{
+  width:70px;height:70px;border-radius:50%;border:4px solid #fff;
+  background:rgba(255,255,255,0.15);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform 0.1s;
+}
+.shutter:active{transform:scale(0.9)}
+.shutter::after{content:'';width:52px;height:52px;border-radius:50%;background:#fff}
+.cam-btn{
+  background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);
+  color:#fff;padding:10px 18px;border-radius:24px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;
+}
+.cam-flip{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);
+  color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+#capCanvas{display:none}
+#fileInput{display:none}
+
+/* ── MISC ── */
+.section-sep{height:1px;background:var(--border);margin:0 20px}
+.empty-state{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty-ico{font-size:36px;opacity:0.3}
+.empty-txt{font-size:11px;color:var(--mid);line-height:1.8}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div>
+    <div class="login-logo">Macro<em>Lens</em></div>
+    <div style="margin-top:8px" class="login-sub">AI-powered food tracking</div>
+  </div>
+  <div class="login-card">
+    <div class="login-desc">Sign in to sync your meals,<br>goals and history across devices.</div>
+    <button id="googleBtn" onclick="signInWithGoogle()">
+      <svg class="g-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="topbar-logo">Macro<em>Lens</em></div>
+    <div class="topbar-right">
+      <div class="avatar" id="avatarBtn" onclick="switchTab('settings')">
+        <span id="avatarInitial">?</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="today" onclick="switchTab('today')">Today</button>
+    <button class="tab" data-tab="scan" onclick="switchTab('scan')">Scan</button>
+    <button class="tab" data-tab="calendar" onclick="switchTab('calendar')">Calendar</button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+  </div>
+
+  <div class="scroll">
+    <!-- TODAY -->
+    <div class="panel active" id="panel-today">
+      <div class="today-hero">
+        <div class="ring-row">
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 100 100">
+              <circle class="ring-track" cx="50" cy="50" r="42"/>
+              <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-cal" id="ringCal">0</div>
+              <div class="ring-label">kcal</div>
+            </div>
+          </div>
+          <div class="ring-meta">
+            <div class="ring-goal-row">
+              <span class="ring-goal-label">Goal</span>
+              <span class="ring-goal-val" id="goalDisplay">2000</span>
+            </div>
+            <div class="ring-remain" id="remainDisplay"></div>
+            <div style="margin-top:6px">
+              <div id="macroBarP" style="height:3px;border-radius:2px;background:#60a8f0;margin-bottom:4px;transition:width 0.8s ease;width:0%"></div>
+              <div id="macroBarC" style="height:3px;border-radius:2px;background:#f0c04e;margin-bottom:4px;transition:width 0.8s ease;width:0%"></div>
+              <div id="macroBarF" style="height:3px;border-radius:2px;background:#f07860;transition:width 0.8s ease;width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="macro-strip">
+          <div class="macro-pill p">
+            <div class="mpill-val" id="todayP">0</div>
+            <div class="mpill-label">Protein</div>
+            <div class="mpill-unit">grams</div>
+          </div>
+          <div class="macro-pill c">
+            <div class="mpill-val" id="todayC">0</div>
+            <div class="mpill-label">Carbs</div>
+            <div class="mpill-unit">grams</div>
+          </div>
+          <div class="macro-pill f">
+            <div class="mpill-val" id="todayF">0</div>
+            <div class="mpill-label">Fat</div>
+            <div class="mpill-unit">grams</div>
+          </div>
+        </div>
+      </div>
+      <div class="meals-header">
+        <div class="meals-title">Today's Meals</div>
+      </div>
+      <div id="todayMealsList"></div>
+    </div>
+
+    <!-- SCAN -->
+    <div class="panel" id="panel-scan">
+      <div class="scan-wrap">
+        <div class="photo-row">
+          <div class="slot" id="slot0" onclick="slotTap(0)">
+            <div class="slot-ico">📷</div>
+            <div class="slot-lbl">Top-down</div>
+          </div>
+          <div class="slot" id="slot1" onclick="slotTap(1)">
+            <div class="slot-ico">📐</div>
+            <div class="slot-lbl">Angled</div>
+          </div>
+        </div>
+        <div>
+          <div class="field-label">Add context (optional)</div>
+          <textarea id="ctxInput" rows="3" placeholder="e.g. home-cooked stir fry with lots of oil, restaurant-size portion, added olive oil…"></textarea>
+        </div>
+        <div class="progress-bar" id="scanProgress"><div class="progress-fill"></div></div>
+        <div class="status" id="scanStatus"></div>
+        <button class="btn-primary" id="analyzeBtn" onclick="doAnalyze()">↑ &nbsp;Analyze Plate</button>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="panel" id="panel-calendar">
+      <div class="cal-wrap">
+        <div class="cal-nav">
+          <button class="cal-arrow" onclick="calShift(-1)">‹</button>
+          <div class="cal-month" id="calMonthLabel"></div>
+          <button class="cal-arrow" onclick="calShift(1)">›</button>
+        </div>
+        <div class="cal-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--lime)"></div>Under goal</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Over</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Way over</div>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-weekdays">
+            <div class="cal-wd">Su</div><div class="cal-wd">Mo</div><div class="cal-wd">Tu</div>
+            <div class="cal-wd">We</div><div class="cal-wd">Th</div><div class="cal-wd">Fr</div>
+            <div class="cal-wd">Sa</div>
+          </div>
+          <div class="cal-days" id="calDays"></div>
+        </div>
+        <div class="day-detail" id="dayDetail">
+          <div class="dd-header">
+            <div class="dd-date" id="ddDate"></div>
+            <button class="dd-close" onclick="closeDayDetail()">✕</button>
+          </div>
+          <div class="modal-totals" id="ddMacros"></div>
+          <div id="ddMeals"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="settings-wrap">
+        <div class="profile-row" id="profileRow"></div>
+        <div class="settings-group">
+          <div class="sg-title">Daily Goals</div>
+          <div class="sg-row">
+            <div class="sg-label">Calorie Goal (kcal/day)</div>
+            <input type="number" id="setCalGoal" placeholder="2000" min="500" max="10000">
+          </div>
+          <div class="sg-row">
+            <div class="sg-label">Protein Goal (g/day)</div>
+            <input type="number" id="setProGoal" placeholder="150" min="0" max="500">
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="sg-title">MiniMax API</div>
+          <div class="sg-row">
+            <div class="sg-label">API Key</div>
+            <input type="password" id="setApiKey" placeholder="Your MiniMax API key">
+          </div>
+          <div class="sg-row">
+            <div class="sg-label">Group ID (optional)</div>
+            <input type="text" id="setGroupId" placeholder="Your Group ID">
+          </div>
+        </div>
+        <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+        <div class="status" id="settingsStatus"></div>
+        <button class="btn-danger" onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEAL EDIT MODAL -->
+<div class="modal-overlay" id="mealModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">Edit Meal</div>
+    <div class="modal-totals" id="modalTotals"></div>
+    <div class="modal-foods" id="modalFoods"></div>
+    <div class="edit-nl-box">
+      <div class="edit-nl-label">Edit with natural language</div>
+      <textarea id="nlInput" rows="2" placeholder="e.g. 'I actually used 2 tbsp olive oil' or 'remove the bread' or 'add 200ml orange juice'"></textarea>
+      <button class="btn-nl" id="nlBtn" onclick="applyNL()">Apply ↵</button>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-modal-save" onclick="saveMealEdit()">Save</button>
+      <button class="btn-modal-del" onclick="deleteMeal()">Delete</button>
+      <button class="btn-modal-close" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA -->
+<div class="cam-modal" id="camModal">
+  <video id="camVideo" autoplay playsinline muted></video>
+  <canvas id="capCanvas"></canvas>
+  <div class="cam-controls">
+    <button class="cam-btn" onclick="closeCam()">Cancel</button>
+    <button class="shutter" onclick="capPhoto()"></button>
+    <button class="cam-flip" onclick="flipCam()">🔄</button>
+  </div>
+</div>
+<input type="file" id="fileInput" accept="image/*">
+
+<script>
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let G = {
+  user: null,       // { id, name, email, picture }
+  settings: {},     // { calorieGoal, proteinGoal, apiKey, groupId }
+  log: [],          // array of meal entries
+  photos: [null,null],
+  camStream: null,
+  camFacing: 'environment',
+  currentSlot: 0,
+  editingMealId: null,
+  editingMealData: null,  // live copy being edited in modal
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+};
+
+const TODAY = () => new Date().toISOString().slice(0,10);
+
+// ════════════════════════════════════════════════════════════
+// GOOGLE AUTH
+// ════════════════════════════════════════════════════════════
+// We use Google Identity Services popup flow with a client_id
+// For a real deployment you'd register your own. We use a
+// demo approach: decode the credential JWT client-side.
+const GOOGLE_CLIENT_ID = ''; // intentionally blank — see note below
+
+function signInWithGoogle() {
+  // Since we can't embed a real OAuth client_id in a static file,
+  // we use a mock/demo login that stores locally.
+  // In production: replace with real Google OAuth.
+  const name = prompt('Demo mode: enter your name (Google OAuth requires a server deploy):');
+  if (!name) return;
+  const email = prompt('Enter your email:');
+  if (!email) return;
+  const user = { id: btoa(email), name, email, picture: null };
+  finishLogin(user);
+}
+
+function finishLogin(user) {
+  G.user = user;
+  loadUserData();
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').classList.remove('hidden');
+  renderAvatar();
+  renderSettings();
+  renderToday();
+  renderCalendar();
+}
+
+function renderAvatar() {
+  const el = document.getElementById('avatarBtn');
+  if (G.user.picture) {
+    el.innerHTML = `<img src="${G.user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+  } else {
+    el.innerHTML = `<span style="font-size:13px">${G.user.name.charAt(0).toUpperCase()}</span>`;
+  }
+  const pr = document.getElementById('profileRow');
+  pr.innerHTML = `
+    <div style="width:48px;height:48px;border-radius:50%;border:2px solid var(--border2);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">
+      ${G.user.picture ? `<img src="${G.user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : G.user.name.charAt(0)}
+    </div>
+    <div>
+      <div class="profile-name">${G.user.name}</div>
+      <div class="profile-email">${G.user.email}</div>
+    </div>`;
+}
+
+function signOut() {
+  if (!confirm('Sign out?')) return;
+  G.user = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ════════════════════════════════════════════════════════════
+function storageKey(k) { return `ml_${G.user.id}_${k}`; }
+
+function loadUserData() {
+  G.settings = JSON.parse(localStorage.getItem(storageKey('settings')) || '{"calorieGoal":2000,"proteinGoal":150,"apiKey":"","groupId":""}');
+  G.log = JSON.parse(localStorage.getItem(storageKey('log')) || '[]');
+}
+
+function saveLog() {
+  localStorage.setItem(storageKey('log'), JSON.stringify(G.log));
+}
+
+function saveSettingsStore() {
+  localStorage.setItem(storageKey('settings'), JSON.stringify(G.settings));
+}
+
+// ════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'today') renderToday();
+  if (name === 'calendar') renderCalendar();
+}
+
+// ════════════════════════════════════════════════════════════
+// TODAY
+// ════════════════════════════════════════════════════════════
+function todayMeals() {
+  return G.log.filter(m => m.date === TODAY());
+}
+
+function dayMeals(dateStr) {
+  return G.log.filter(m => m.date === dateStr);
+}
+
+function sumMacros(meals) {
+  return meals.reduce((acc, m) => {
+    acc.cal += m.totals.calories || 0;
+    acc.p += m.totals.protein_g || 0;
+    acc.c += m.totals.carbs_g || 0;
+    acc.f += m.totals.fat_g || 0;
+    return acc;
+  }, {cal:0, p:0, c:0, f:0});
+}
+
+function renderToday() {
+  const meals = todayMeals();
+  const sums = sumMacros(meals);
+  const goal = G.settings.calorieGoal || 2000;
+
+  // Ring
+  const circ = 263.9;
+  const pct = Math.min(sums.cal / goal, 1.0);
+  const offset = circ - (pct * circ);
+  const ring = document.getElementById('ringFill');
+  ring.style.strokeDashoffset = offset;
+  ring.classList.toggle('ring-over', sums.cal > goal);
+  document.getElementById('ringCal').textContent = Math.round(sums.cal);
+  document.getElementById('goalDisplay').textContent = goal;
+
+  const remain = goal - Math.round(sums.cal);
+  const remEl = document.getElementById('remainDisplay');
+  if (remain >= 0) {
+    remEl.innerHTML = `<span class="remain-pos">${remain} kcal remaining</span>`;
+  } else {
+    remEl.innerHTML = `<span class="remain-neg">${Math.abs(remain)} kcal over</span>`;
+  }
+
+  // Macro bars (relative to goal-implied amounts, rough ratios)
+  const pGoal = G.settings.proteinGoal || 150;
+  document.getElementById('macroBarP').style.width = Math.min(sums.p / pGoal, 1) * 100 + '%';
+  document.getElementById('macroBarC').style.width = Math.min(sums.c / 250, 1) * 100 + '%';
+  document.getElementById('macroBarF').style.width = Math.min(sums.f / 80, 1) * 100 + '%';
+
+  document.getElementById('todayP').textContent = Math.round(sums.p);
+  document.getElementById('todayC').textContent = Math.round(sums.c);
+  document.getElementById('todayF').textContent = Math.round(sums.f);
+
+  // Meals list
+  const list = document.getElementById('todayMealsList');
+  if (meals.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-ico">🍽</div><div class="empty-txt">No meals logged today.<br>Scan a plate to start.</div></div>`;
+    return;
+  }
+  list.innerHTML = meals.map(m => mealCardHTML(m)).join('');
+}
+
+function mealCardHTML(m) {
+  const time = new Date(m.ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+  const thumbHTML = m.thumb
+    ? `<div class="meal-thumb"><img src="${m.thumb}"></div>`
+    : `<div class="meal-thumb">🍽</div>`;
+  const foods = (m.foods || []).map(f => f.name).join(', ') || 'Meal';
+  return `<div class="meal-card" onclick="openMealModal('${m.id}')">
+    <div class="meal-card-top">
+      ${thumbHTML}
+      <div class="meal-info">
+        <div class="meal-time">${time}</div>
+        <div class="meal-foods">${foods}</div>
+      </div>
+      <div class="meal-right">
+        <div class="meal-cal">${Math.round(m.totals.calories||0)}</div>
+        <div class="meal-cal-u">kcal</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// PHOTO / CAMERA
+// ════════════════════════════════════════════════════════════
+function slotTap(idx) {
+  const slot = document.getElementById('slot' + idx);
+  if (slot.classList.contains('filled')) { clearSlot(idx); return; }
+  G.currentSlot = idx;
+  openCam();
+}
+function clearSlot(idx) {
+  G.photos[idx] = null;
+  const slot = document.getElementById('slot' + idx);
+  slot.classList.remove('filled');
+  slot.innerHTML = `<div class="slot-ico">${idx===0?'📷':'📐'}</div><div class="slot-lbl">${idx===0?'Top-down':'Angled'}</div>`;
+}
+function setSlotPhoto(idx, dataUrl) {
+  G.photos[idx] = dataUrl;
+  const slot = document.getElementById('slot' + idx);
+  slot.classList.add('filled');
+  slot.innerHTML = `<img src="${dataUrl}"><div class="slot-x">✕</div>`;
+}
+
+async function openCam() {
+  try {
+    if (G.camStream) G.camStream.getTracks().forEach(t=>t.stop());
+    G.camStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:G.camFacing,width:{ideal:1920},height:{ideal:1440}},audio:false
+    });
+    document.getElementById('camVideo').srcObject = G.camStream;
+    document.getElementById('camModal').classList.add('open');
+  } catch(e) {
+    const fi = document.getElementById('fileInput');
+    fi.onchange = ev => {
+      const file = ev.target.files[0]; if(!file) return;
+      const r = new FileReader();
+      r.onload = e => setSlotPhoto(G.currentSlot, e.target.result);
+      r.readAsDataURL(file); fi.value='';
+    };
+    fi.click();
+  }
+}
+function closeCam() {
+  if (G.camStream) { G.camStream.getTracks().forEach(t=>t.stop()); G.camStream=null; }
+  document.getElementById('camModal').classList.remove('open');
+}
+function flipCam() { G.camFacing = G.camFacing==='environment'?'user':'environment'; openCam(); }
+function capPhoto() {
+  const v = document.getElementById('camVideo');
+  const c = document.getElementById('capCanvas');
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  setSlotPhoto(G.currentSlot, c.toDataURL('image/jpeg',0.85));
+  closeCam();
+}
+
+// ════════════════════════════════════════════════════════════
+// ANALYZE
+// ════════════════════════════════════════════════════════════
+async function doAnalyze() {
+  const ctx = document.getElementById('ctxInput').value.trim();
+  const hasPhoto = G.photos[0]||G.photos[1];
+  if (!hasPhoto && !ctx) { setScanStatus('Add a photo or describe your meal.', true); return; }
+  if (!G.settings.apiKey) { setScanStatus('Add your MiniMax API key in Settings.', true); switchTab('settings'); return; }
+
+  setScanStatus('Analyzing…');
+  document.getElementById('scanProgress').classList.add('on');
+  document.getElementById('analyzeBtn').disabled = true;
+
+  try {
+    const result = await callMiniMax(G.photos[0], G.photos[1], ctx);
+    const meal = {
+      id: Date.now().toString(),
+      date: TODAY(),
+      ts: new Date().toISOString(),
+      thumb: G.photos[0] || G.photos[1],
+      foods: result.foods || [],
+      totals: result.totals || {},
+      hiddenNotes: result.hidden_calories_notes || '',
+      confidence: result.confidence || 0,
+    };
+    G.log.unshift(meal);
+    saveLog();
+    setScanStatus('');
+    // Clear slots
+    clearSlot(0); clearSlot(1);
+    document.getElementById('ctxInput').value='';
+    switchTab('today');
+    renderToday();
+  } catch(e) {
+    setScanStatus('Error: ' + e.message, true);
+  } finally {
+    document.getElementById('scanProgress').classList.remove('on');
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function setScanStatus(msg, err=false) {
+  const el = document.getElementById('scanStatus');
+  el.textContent = msg; el.className = 'status'+(err?' err':'');
+}
+
+async function callMiniMax(p1, p2, ctx, systemOverride, userOverride) {
+  const sys = systemOverride || `You are a precise nutrition AI. Analyze food images and/or descriptions.
+Return ONLY valid JSON with this exact structure:
+{
+  "foods": [{"name":"...","portion":"...","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],
+  "totals": {"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},
+  "hidden_calories_notes": "...",
+  "confidence": 75
+}
+Be accurate with portions. Account for cooking oil, sauces. Return ONLY JSON.`;
+
+  const userContent = [];
+  if (p1) userContent.push({type:'image_url',image_url:{url:`data:image/jpeg;base64,${p1.split(',')[1]}`}});
+  if (p2) userContent.push({type:'image_url',image_url:{url:`data:image/jpeg;base64,${p2.split(',')[1]}`}});
+  const txt = userOverride || ((!p1&&!p2) ? `User described: "${ctx}". Estimate macros.` : `Analyze this meal.${ctx ? ' Context: '+ctx : ''}`);
+  userContent.push({type:'text',text:txt});
+
+  const gid = G.settings.groupId;
+  const url = `https://api.minimaxi.chat/v1/text/chatcompletion_v2${gid?'?GroupId='+gid:''}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.settings.apiKey}`},
+    body: JSON.stringify({model:'MiniMax-VL-01',max_tokens:1200,messages:[{role:'system',content:sys},{role:'user',content:userContent}]})
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(`API ${res.status}: ${e.slice(0,150)}`); }
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content || '';
+  const clean = text.replace(/```json|```/g,'').trim();
+  try { return JSON.parse(clean); }
+  catch { const m = clean.match(/\{[\s\S]*\}/); if(m) return JSON.parse(m[0]); throw new Error('Could not parse AI response.'); }
+}
+
+// ════════════════════════════════════════════════════════════
+// MEAL EDIT MODAL
+// ════════════════════════════════════════════════════════════
+function openMealModal(id) {
+  const meal = G.log.find(m => m.id === id);
+  if (!meal) return;
+  G.editingMealId = id;
+  G.editingMealData = JSON.parse(JSON.stringify(meal)); // deep copy
+  renderModal();
+  document.getElementById('mealModal').classList.add('open');
+}
+
+function renderModal() {
+  const m = G.editingMealData;
+  const time = new Date(m.ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+  const date = new Date(m.ts).toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('modalTitle').textContent = `${date} · ${time}`;
+
+  // Totals
+  const t = m.totals;
+  document.getElementById('modalTotals').innerHTML = `
+    <div><div class="mt-val c">${Math.round(t.calories||0)}</div><div class="mt-label">kcal</div></div>
+    <div><div class="mt-val">${Math.round(t.protein_g||0)}</div><div class="mt-label">protein</div></div>
+    <div><div class="mt-val">${Math.round(t.carbs_g||0)}</div><div class="mt-label">carbs</div></div>
+    <div><div class="mt-val">${Math.round(t.fat_g||0)}</div><div class="mt-label">fat</div></div>`;
+
+  // Foods
+  const foods = m.foods || [];
+  document.getElementById('modalFoods').innerHTML = foods.map((f,i) => `
+    <div class="modal-food-row">
+      <div class="mfr-name">${f.name}</div>
+      <div class="mfr-val" title="portion">${f.portion}</div>
+      <div class="mfr-val"><span>${Math.round(f.calories||0)}</span><br><span style="font-size:8px;color:var(--dim)">kcal</span></div>
+      <div class="mfr-val"><span>${Math.round(f.protein_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">P</span></div>
+      <div class="mfr-val"><span>${Math.round(f.fat_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">F</span></div>
+    </div>`).join('');
+
+  if (m.hiddenNotes) {
+    document.getElementById('modalFoods').innerHTML += `
+      <div style="background:var(--s2);border-left:2px solid var(--cyan);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--mid);line-height:1.7;margin-top:2px">
+        <span style="font-size:9px;color:var(--cyan);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px">Hidden Calories</span>
+        ${m.hiddenNotes}
+      </div>`;
+  }
+
+  document.getElementById('nlInput').value = '';
+}
+
+function closeModal() {
+  document.getElementById('mealModal').classList.remove('open');
+  G.editingMealId = null;
+  G.editingMealData = null;
+}
+
+function saveMealEdit() {
+  const idx = G.log.findIndex(m => m.id === G.editingMealId);
+  if (idx !== -1) {
+    G.log[idx] = G.editingMealData;
+    saveLog();
+  }
+  closeModal();
+  renderToday();
+  renderCalendar();
+}
+
+function deleteMeal() {
+  if (!confirm('Delete this meal?')) return;
+  G.log = G.log.filter(m => m.id !== G.editingMealId);
+  saveLog();
+  closeModal();
+  renderToday();
+  renderCalendar();
+}
+
+async function applyNL() {
+  const instruction = document.getElementById('nlInput').value.trim();
+  if (!instruction) return;
+  if (!G.settings.apiKey) { alert('Add your MiniMax API key in Settings first.'); return; }
+
+  const btn = document.getElementById('nlBtn');
+  btn.disabled = true; btn.textContent = '…';
+
+  const currentData = JSON.stringify(G.editingMealData.foods);
+
+  const sys = `You are a nutrition editor. The user has a meal with these foods (JSON):
+${currentData}
+
+The user wants to modify it. Apply their instruction and return the COMPLETE updated meal as JSON with this structure:
+{
+  "foods": [{"name":"...","portion":"...","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],
+  "totals": {"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},
+  "hidden_calories_notes": "...",
+  "confidence": 80
+}
+Recompute totals from the updated foods list. Return ONLY valid JSON.`;
+
+  try {
+    const result = await callMiniMax(null, null, '', sys, `User instruction: "${instruction}"`);
+    G.editingMealData.foods = result.foods || G.editingMealData.foods;
+    G.editingMealData.totals = result.totals || G.editingMealData.totals;
+    if (result.hidden_calories_notes) G.editingMealData.hiddenNotes = result.hidden_calories_notes;
+    renderModal();
+    document.getElementById('nlInput').value = '';
+  } catch(e) {
+    alert('Error applying edit: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Apply ↵';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════════════════════════
+function calShift(dir) {
+  G.calMonth += dir;
+  if (G.calMonth > 11) { G.calMonth=0; G.calYear++; }
+  if (G.calMonth < 0) { G.calMonth=11; G.calYear--; }
+  closeDayDetail();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const y = G.calYear, mo = G.calMonth;
+  const label = new Date(y, mo, 1).toLocaleDateString('en-US', {month:'long',year:'numeric'});
+  document.getElementById('calMonthLabel').textContent = label;
+
+  const firstDay = new Date(y, mo, 1).getDay();
+  const daysInMonth = new Date(y, mo+1, 0).getDate();
+  const todayStr = TODAY();
+  const goal = G.settings.calorieGoal || 2000;
+
+  // Build a map of date -> summed calories
+  const calMap = {};
+  G.log.forEach(m => {
+    if (!calMap[m.date]) calMap[m.date] = 0;
+    calMap[m.date] += m.totals.calories || 0;
+  });
+
+  let html = '';
+  for (let i=0; i<firstDay; i++) html += '<div class="cal-day empty"></div>';
+  for (let d=1; d<=daysInMonth; d++) {
+    const ds = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cal = calMap[ds] || 0;
+    const isToday = ds === todayStr;
+    const hasCal = cal > 0;
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    if (hasCal) {
+      cls += ' has-data';
+      const ratio = cal / goal;
+      if (ratio <= 1.0) cls += ' under';
+      else if (ratio <= 1.2) cls += ' over';
+      else cls += ' way-over';
+    }
+    const pctLabel = hasCal ? `<div class="cal-day-pct">${Math.round(cal/goal*100)}%</div>` : '';
+    html += `<div class="${cls}" onclick="calDayClick('${ds}')">
+      <div class="cal-day-num">${d}</div>
+      ${hasCal ? '<div class="cal-dot"></div>' : ''}
+      ${pctLabel}
+    </div>`;
+  }
+  document.getElementById('calDays').innerHTML = html;
+}
+
+function calDayClick(dateStr) {
+  const meals = dayMeals(dateStr);
+  if (meals.length === 0) { closeDayDetail(); return; }
+  const sums = sumMacros(meals);
+  const goal = G.settings.calorieGoal || 2000;
+  const dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
+
+  document.getElementById('ddDate').textContent = dateLabel;
+  document.getElementById('ddMacros').innerHTML = `
+    <div><div class="mt-val c">${Math.round(sums.cal)}</div><div class="mt-label">kcal</div></div>
+    <div><div class="mt-val">${Math.round(sums.p)}</div><div class="mt-label">protein</div></div>
+    <div><div class="mt-val">${Math.round(sums.c)}</div><div class="mt-label">carbs</div></div>
+    <div><div class="mt-val">${Math.round(sums.f)}</div><div class="mt-label">fat</div></div>`;
+
+  const remain = goal - sums.cal;
+  const remainHTML = remain >= 0
+    ? `<div style="font-size:11px;color:var(--cyan);margin-top:4px">${Math.round(remain)} kcal under goal</div>`
+    : `<div style="font-size:11px;color:var(--orange);margin-top:4px">${Math.round(Math.abs(remain))} kcal over goal</div>`;
+
+  document.getElementById('ddMeals').innerHTML = remainHTML + meals.map(m => {
+    const time = new Date(m.ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+    return `<div class="dd-meal" onclick="openMealModal('${m.id}')">
+      <div><div class="dd-meal-name">${(m.foods||[]).map(f=>f.name).join(', ')||'Meal'}</div>
+      <div style="font-size:10px;color:var(--mid)">${time}</div></div>
+      <div class="dd-meal-cal">${Math.round(m.totals.calories||0)}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('dayDetail').classList.add('visible');
+}
+
+function closeDayDetail() {
+  document.getElementById('dayDetail').classList.remove('visible');
+}
+
+// ════════════════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════════════════
+function renderSettings() {
+  document.getElementById('setCalGoal').value = G.settings.calorieGoal || '';
+  document.getElementById('setProGoal').value = G.settings.proteinGoal || '';
+  document.getElementById('setApiKey').value = G.settings.apiKey || '';
+  document.getElementById('setGroupId').value = G.settings.groupId || '';
+}
+
+function saveSettings() {
+  G.settings.calorieGoal = parseInt(document.getElementById('setCalGoal').value) || 2000;
+  G.settings.proteinGoal = parseInt(document.getElementById('setProGoal').value) || 150;
+  G.settings.apiKey = document.getElementById('setApiKey').value.trim();
+  G.settings.groupId = document.getElementById('setGroupId').value.trim();
+  saveSettingsStore();
+  const s = document.getElementById('settingsStatus');
+  s.textContent = 'Saved.'; setTimeout(()=>s.textContent='', 2000);
+  renderToday();
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+// Auto-restore session
+(function() {
+  const saved = localStorage.getItem('ml_session');
+  if (saved) {
+    try {
+      const user = JSON.parse(saved);
+      G.user = user;
+      loadUserData();
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').classList.remove('hidden');
+      renderAvatar();
+      renderSettings();
+      renderToday();
+      renderCalendar();
+    } catch(e) { localStorage.removeItem('ml_session'); }
+  }
+})();
+
+const _origFinish = finishLogin;
+window.finishLogin = function(user) {
+  localStorage.setItem('ml_session', JSON.stringify(user));
+  _origFinish(user);
+};
+
+const _origSignOut = signOut;
+window.signOut = function() {
+  if (!confirm('Sign out?')) return;
+  localStorage.removeItem('ml_session');
+  G.user = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').classList.add('hidden');
+};
+</script>
+</body>
+</html>
