@@ -566,7 +566,18 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
           </div>
         </div>
         <div class="settings-group">
-          <div class="sg-title">MiniMax API</div>
+          <div class="sg-title">AI Provider</div>
+          <div class="sg-row">
+            <div class="sg-label">Mode</div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+              <input type="checkbox" id="setForceMinimax">
+              <span style="font-size:11px;color:var(--mid)">Force MiniMax (skip Gemini)</span>
+            </label>
+            <div style="font-size:10px;color:var(--dim);margin-top:2px">By default, Gemini is used. MiniMax is the fallback if Gemini is rate limited.</div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="sg-title">MiniMax API (fallback)</div>
           <div class="sg-row">
             <div class="sg-label">API Key</div>
             <input type="password" id="setApiKey" placeholder="Your MiniMax API key">
@@ -729,9 +740,10 @@ async function loadUserData() {
       proteinGoal: d.proteinGoal || 150,
       apiKey: d.apiKey || '',
       groupId: d.groupId || '',
+      forceMinimax: d.forceMinimax || false,
     };
   } else {
-    G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '' };
+    G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '', forceMinimax: false };
     await userRef.set(G.settings);
   }
   const mealsSnap = await userRef.collection('meals').orderBy('ts', 'desc').get();
@@ -924,14 +936,13 @@ async function doAnalyze() {
   const ctx = document.getElementById('ctxInput').value.trim();
   const hasPhoto = G.photos[0]||G.photos[1];
   if (!hasPhoto && !ctx) { setScanStatus('Add a photo or describe your meal.', true); return; }
-  if (!G.settings.apiKey) { setScanStatus('Add your MiniMax API key in Settings.', true); switchTab('settings'); return; }
 
   setScanStatus('Analyzing…');
   document.getElementById('scanProgress').classList.add('on');
   document.getElementById('analyzeBtn').disabled = true;
 
   try {
-    const result = await callMiniMax(G.photos[0], G.photos[1], ctx);
+    const result = await callAI(G.photos[0], G.photos[1], ctx);
     const meal = {
       id: Date.now().toString(),
       date: TODAY(),
@@ -963,45 +974,29 @@ function setScanStatus(msg, err=false) {
   el.textContent = msg; el.className = 'status'+(err?' err':'');
 }
 
-async function callMiniMax(p1, p2, ctx, systemOverride, userOverride) {
+async function callAI(p1, p2, ctx, systemOverride, userOverride) {
   const sys = systemOverride || `Nutrition AI. Return ONLY valid JSON:
 {"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":75}
 Accurate portions. Account for oils/sauces. JSON only.`;
 
-  const userContent = [];
-  if (p1) userContent.push({type:'image_url',image_url:{url:`data:image/jpeg;base64,${p1.split(',')[1]}`}});
-  if (p2) userContent.push({type:'image_url',image_url:{url:`data:image/jpeg;base64,${p2.split(',')[1]}`}});
-  const txt = userOverride || ((!p1&&!p2) ? `User described: "${ctx}". Estimate macros.` : `Analyze this meal.${ctx ? ' Context: '+ctx : ''}`);
-  userContent.push({type:'text',text:txt});
+  const userText = userOverride || ((!p1&&!p2) ? `User described: "${ctx}". Estimate macros.` : `Analyze this meal.${ctx ? ' Context: '+ctx : ''}`);
 
-  const hasImages = !!(p1 || p2);
-  const model = hasImages ? 'MiniMax-VL-01' : 'abab6.5s-chat';
-  // Text-only model expects content as a string, not an array
-  const userMsg = hasImages ? userContent : userContent.find(c => c.type === 'text').text;
-  const gid = G.settings.groupId;
-  const url = `https://api.minimaxi.chat/v1/text/chatcompletion_v2${gid?'?GroupId='+gid:''}`;
-  const res = await fetch(url, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.settings.apiKey}`},
-    body: JSON.stringify({model,max_tokens:500,messages:[{role:'system',content:sys},{role:'user',content:userMsg}]})
+  const res = await fetch('/.netlify/functions/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemPrompt: sys,
+      userText,
+      image1: p1 || null,
+      image2: p2 || null,
+      minimaxKey: G.settings.apiKey || '',
+      minimaxGroupId: G.settings.groupId || '',
+      forceMinimax: G.settings.forceMinimax || false,
+    })
   });
-  if (!res.ok) { const e = await res.text(); throw new Error(`API ${res.status}: ${e.slice(0,150)}`); }
   const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content || '';
-  const clean = text.replace(/```json|```/g,'').trim();
-  try { return JSON.parse(clean); }
-  catch {
-    // Find outermost {...} by tracking brace depth
-    let start = clean.indexOf('{'), depth = 0, end = -1;
-    if (start !== -1) {
-      for (let i = start; i < clean.length; i++) {
-        if (clean[i] === '{') depth++;
-        else if (clean[i] === '}' && --depth === 0) { end = i; break; }
-      }
-    }
-    if (end !== -1) try { return JSON.parse(clean.slice(start, end + 1)); } catch {}
-    throw new Error('Could not parse AI response.');
-  }
+  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+  return data;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1093,7 +1088,6 @@ async function deleteMeal() {
 async function applyNL() {
   const instruction = document.getElementById('nlInput').value.trim();
   if (!instruction) return;
-  if (!G.settings.apiKey) { alert('Add your MiniMax API key in Settings first.'); return; }
 
   const btn = document.getElementById('nlBtn');
   btn.disabled = true; btn.textContent = '…';
@@ -1113,7 +1107,7 @@ The user wants to modify it. Apply their instruction and return the COMPLETE upd
 Recompute totals from the updated foods list. Return ONLY valid JSON.`;
 
   try {
-    const result = await callMiniMax(null, null, '', sys, `User instruction: "${instruction}"`);
+    const result = await callAI(null, null, '', sys, `User instruction: "${instruction}"`);
     G.editingMealData.foods = result.foods || G.editingMealData.foods;
     G.editingMealData.totals = result.totals || G.editingMealData.totals;
     if (result.hidden_calories_notes) G.editingMealData.hiddenNotes = result.hidden_calories_notes;
@@ -1223,6 +1217,7 @@ function renderSettings() {
   document.getElementById('setProGoal').value = G.settings.proteinGoal || '';
   document.getElementById('setApiKey').value = G.settings.apiKey || '';
   document.getElementById('setGroupId').value = G.settings.groupId || '';
+  document.getElementById('setForceMinimax').checked = G.settings.forceMinimax || false;
 }
 
 async function saveSettings() {
@@ -1230,6 +1225,7 @@ async function saveSettings() {
   G.settings.proteinGoal = parseInt(document.getElementById('setProGoal').value) || 150;
   G.settings.apiKey = document.getElementById('setApiKey').value.trim();
   G.settings.groupId = document.getElementById('setGroupId').value.trim();
+  G.settings.forceMinimax = document.getElementById('setForceMinimax').checked;
   const s = document.getElementById('settingsStatus');
   try {
     await saveSettingsStore();
