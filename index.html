@@ -643,30 +643,27 @@ const TODAY = () => new Date().toISOString().slice(0,10);
 // We use Google Identity Services popup flow with a client_id
 // For a real deployment you'd register your own. We use a
 // demo approach: decode the credential JWT client-side.
-const GOOGLE_CLIENT_ID = ''; // intentionally blank — see note below
-
 function signInWithGoogle() {
-  // Since we can't embed a real OAuth client_id in a static file,
-  // we use a mock/demo login that stores locally.
-  // In production: replace with real Google OAuth.
-  const name = prompt('Demo mode: enter your name (Google OAuth requires a server deploy):');
-  if (!name) return;
-  const email = prompt('Enter your email:');
-  if (!email) return;
-  const user = { id: btoa(email), name, email, picture: null };
-  finishLogin(user);
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(e => alert('Sign-in failed: ' + e.message));
 }
 
-function finishLogin(user) {
-  G.user = user;
-  loadUserData();
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').classList.remove('hidden');
-  renderAvatar();
-  renderSettings();
-  renderToday();
-  renderCalendar();
-}
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    G.user = { id: user.uid, name: user.displayName, email: user.email, picture: user.photoURL };
+    await loadUserData();
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').classList.remove('hidden');
+    renderAvatar();
+    renderSettings();
+    renderToday();
+    renderCalendar();
+  } else {
+    G.user = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').classList.add('hidden');
+  }
+});
 
 function renderAvatar() {
   const el = document.getElementById('avatarBtn');
@@ -688,9 +685,7 @@ function renderAvatar() {
 
 function signOut() {
   if (!confirm('Sign out?')) return;
-  G.user = null;
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('app').classList.add('hidden');
+  auth.signOut();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1159,41 +1154,6 @@ function saveSettings() {
   renderToday();
 }
 
-// ════════════════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════════════════
-// Auto-restore session
-(function() {
-  const saved = localStorage.getItem('ml_session');
-  if (saved) {
-    try {
-      const user = JSON.parse(saved);
-      G.user = user;
-      loadUserData();
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('app').classList.remove('hidden');
-      renderAvatar();
-      renderSettings();
-      renderToday();
-      renderCalendar();
-    } catch(e) { localStorage.removeItem('ml_session'); }
-  }
-})();
-
-const _origFinish = finishLogin;
-window.finishLogin = function(user) {
-  localStorage.setItem('ml_session', JSON.stringify(user));
-  _origFinish(user);
-};
-
-const _origSignOut = signOut;
-window.signOut = function() {
-  if (!confirm('Sign out?')) return;
-  localStorage.removeItem('ml_session');
-  G.user = null;
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('app').classList.add('hidden');
-};
 </script>
 </body>
 </html>
