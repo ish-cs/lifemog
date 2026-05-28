@@ -650,14 +650,20 @@ function signInWithGoogle() {
 
 auth.onAuthStateChanged(async (user) => {
   if (user) {
-    G.user = { id: user.uid, name: user.displayName, email: user.email, picture: user.photoURL };
-    await loadUserData();
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').classList.remove('hidden');
-    renderAvatar();
-    renderSettings();
-    renderToday();
-    renderCalendar();
+    try {
+      G.user = { id: user.uid, name: user.displayName, email: user.email, picture: user.photoURL };
+      await loadUserData();
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').classList.remove('hidden');
+      renderAvatar();
+      renderSettings();
+      renderToday();
+      renderCalendar();
+    } catch (e) {
+      console.error('Failed to load user data:', e);
+      alert('Failed to load your data. Please sign in again.');
+      auth.signOut();
+    }
   } else {
     G.user = null;
     document.getElementById('loginScreen').style.display = 'flex';
@@ -683,9 +689,13 @@ function renderAvatar() {
     </div>`;
 }
 
-function signOut() {
+async function signOut() {
   if (!confirm('Sign out?')) return;
-  auth.signOut();
+  try {
+    await auth.signOut();
+  } catch (e) {
+    alert('Sign-out failed: ' + e.message);
+  }
 }
 
 // ════════════════════════════════════════════════════════════
