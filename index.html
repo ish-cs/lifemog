@@ -862,7 +862,7 @@ async function openCam() {
     fi.onchange = ev => {
       const file = ev.target.files[0]; if(!file) return;
       const r = new FileReader();
-      r.onload = e => setSlotPhoto(G.currentSlot, e.target.result);
+      r.onload = e => resizeDataUrl(e.target.result, 800, resized => setSlotPhoto(G.currentSlot, resized));
       r.readAsDataURL(file); fi.value='';
     };
     fi.click();
@@ -873,13 +873,30 @@ function closeCam() {
   document.getElementById('camModal').classList.remove('open');
 }
 function flipCam() { G.camFacing = G.camFacing==='environment'?'user':'environment'; openCam(); }
+
+function resizeDataUrl(dataUrl, maxPx, cb) {
+  const img = new Image();
+  img.onload = () => {
+    const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    cb(c.toDataURL('image/jpeg', 0.82));
+  };
+  img.src = dataUrl;
+}
+
 function capPhoto() {
   const v = document.getElementById('camVideo');
   const c = document.getElementById('capCanvas');
   c.width=v.videoWidth; c.height=v.videoHeight;
   c.getContext('2d').drawImage(v,0,0);
-  setSlotPhoto(G.currentSlot, c.toDataURL('image/jpeg',0.85));
-  closeCam();
+  resizeDataUrl(c.toDataURL('image/jpeg', 0.92), 800, resized => {
+    setSlotPhoto(G.currentSlot, resized);
+    closeCam();
+  });
 }
 
 // ════════════════════════════════════════════════════════════
