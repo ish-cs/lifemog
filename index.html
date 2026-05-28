@@ -1018,7 +1018,12 @@ async function saveMealEdit() {
   const idx = G.log.findIndex(m => m.id === G.editingMealId);
   if (idx !== -1) {
     G.log[idx] = G.editingMealData;
-    await saveMeal(G.editingMealData);
+    try {
+      await saveMeal(G.editingMealData);
+    } catch (e) {
+      alert('Failed to save meal. Check connection.');
+      return;
+    }
   }
   closeModal();
   renderToday();
@@ -1029,7 +1034,12 @@ async function deleteMeal() {
   if (!confirm('Delete this meal?')) return;
   const idToDelete = G.editingMealId;
   G.log = G.log.filter(m => m.id !== idToDelete);
-  await removeMealFromDB(idToDelete);
+  try {
+    await removeMealFromDB(idToDelete);
+  } catch (e) {
+    alert('Failed to delete meal. Check connection.');
+    return;
+  }
   closeModal();
   renderToday();
   renderCalendar();
@@ -1170,14 +1180,18 @@ function renderSettings() {
   document.getElementById('setGroupId').value = G.settings.groupId || '';
 }
 
-function saveSettings() {
+async function saveSettings() {
   G.settings.calorieGoal = parseInt(document.getElementById('setCalGoal').value) || 2000;
   G.settings.proteinGoal = parseInt(document.getElementById('setProGoal').value) || 150;
   G.settings.apiKey = document.getElementById('setApiKey').value.trim();
   G.settings.groupId = document.getElementById('setGroupId').value.trim();
-  saveSettingsStore();
   const s = document.getElementById('settingsStatus');
-  s.textContent = 'Saved.'; setTimeout(()=>s.textContent='', 2000);
+  try {
+    await saveSettingsStore();
+    s.textContent = 'Saved.'; setTimeout(()=>s.textContent='', 2000);
+  } catch (e) {
+    s.textContent = 'Save failed. Check connection.'; s.className = 'status err';
+  }
   renderToday();
 }
 
