@@ -37,9 +37,16 @@ html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',mon
 #loginScreen{
   position:fixed;inset:0;z-index:200;
   background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
   gap:32px;padding:40px;
 }
+#loadingScreen{
+  position:fixed;inset:0;z-index:300;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+.loading-logo{font-family:'Playfair Display',serif;font-size:36px;letter-spacing:-1px;opacity:0.5}
+.loading-logo em{color:var(--lime);font-style:italic}
 .login-logo{font-family:'Playfair Display',serif;font-size:48px;letter-spacing:-1px;text-align:center}
 .login-logo em{color:var(--lime);font-style:italic}
 .login-sub{font-size:11px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase;text-align:center}
@@ -397,6 +404,9 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 </head>
 <body>
 
+<!-- LOADING -->
+<div id="loadingScreen"><div class="loading-logo">Macro<em>Lens</em></div></div>
+
 <!-- LOGIN -->
 <div id="loginScreen">
   <div>
@@ -653,10 +663,12 @@ function signInWithGoogle() {
 }
 
 auth.onAuthStateChanged(async (user) => {
+  const loading = document.getElementById('loadingScreen');
   if (user) {
     try {
       G.user = { id: user.uid, name: user.displayName, email: user.email, picture: user.photoURL };
       await loadUserData();
+      loading.style.display = 'none';
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').classList.remove('hidden');
       renderAvatar();
@@ -665,11 +677,13 @@ auth.onAuthStateChanged(async (user) => {
       renderCalendar();
     } catch (e) {
       console.error('Failed to load user data:', e);
+      loading.style.display = 'none';
       alert('Failed to load your data. Please sign in again.');
       auth.signOut();
     }
   } else {
     G.user = null;
+    loading.style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('app').classList.add('hidden');
   }
