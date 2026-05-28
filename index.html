@@ -326,7 +326,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 .modal-foods{display:flex;flex-direction:column;gap:6px}
 .modal-food-row{
   background:var(--s2);border-radius:10px;padding:11px 13px;
-  display:grid;grid-template-columns:1fr auto auto auto auto;
+  display:grid;grid-template-columns:1fr auto auto auto auto auto;
   gap:8px;align-items:center;
 }
 .mfr-name{font-size:12px}
@@ -1044,6 +1044,7 @@ function renderModal() {
       <div class="mfr-val" title="portion">${f.portion}</div>
       <div class="mfr-val"><span>${Math.round(f.calories||0)}</span><br><span style="font-size:8px;color:var(--dim)">kcal</span></div>
       <div class="mfr-val"><span>${Math.round(f.protein_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">P</span></div>
+      <div class="mfr-val"><span>${Math.round(f.carbs_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">C</span></div>
       <div class="mfr-val"><span>${Math.round(f.fat_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">F</span></div>
     </div>`).join('');
 
