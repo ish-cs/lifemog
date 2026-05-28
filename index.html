@@ -485,23 +485,26 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
     <!-- SCAN -->
     <div class="panel" id="panel-scan">
       <div class="scan-wrap">
-        <div class="photo-row">
-          <div class="slot" id="slot0" onclick="slotTap(0)">
-            <div class="slot-ico">📷</div>
-            <div class="slot-lbl">Top-down</div>
-          </div>
-          <div class="slot" id="slot1" onclick="slotTap(1)">
-            <div class="slot-ico">📐</div>
-            <div class="slot-lbl">Angled</div>
-          </div>
+        <div>
+          <div class="field-label">Describe your meal</div>
+          <textarea id="ctxInput" rows="4" placeholder="e.g. 2 scrambled eggs, toast with butter, glass of OJ…"></textarea>
         </div>
         <div>
-          <div class="field-label">Add context (optional)</div>
-          <textarea id="ctxInput" rows="3" placeholder="e.g. home-cooked stir fry with lots of oil, restaurant-size portion, added olive oil…"></textarea>
+          <div class="field-label">Add photos for better accuracy (optional)</div>
+          <div class="photo-row">
+            <div class="slot" id="slot0" onclick="slotTap(0)">
+              <div class="slot-ico">📷</div>
+              <div class="slot-lbl">Top-down</div>
+            </div>
+            <div class="slot" id="slot1" onclick="slotTap(1)">
+              <div class="slot-ico">📐</div>
+              <div class="slot-lbl">Angled</div>
+            </div>
+          </div>
         </div>
         <div class="progress-bar" id="scanProgress"><div class="progress-fill"></div></div>
         <div class="status" id="scanStatus"></div>
-        <button class="btn-primary" id="analyzeBtn" onclick="doAnalyze()">↑ &nbsp;Analyze Plate</button>
+        <button class="btn-primary" id="analyzeBtn" onclick="doAnalyze()">↑ &nbsp;Analyze Meal</button>
       </div>
     </div>
 
