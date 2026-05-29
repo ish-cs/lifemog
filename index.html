@@ -1051,7 +1051,7 @@ async function doAnalyze() {
       totals: result.totals || {},
       hiddenNotes: result.hidden_calories_notes || '',
       confidence: result.confidence || 0,
-      emoji: result.emoji || '🍽',
+      emoji: /^\p{Extended_Pictographic}$/u.test(result.emoji || '') ? result.emoji : '🍽',
     };
     G.log.unshift(meal);
     G.log.sort((a, b) => b.ts.localeCompare(a.ts));
