@@ -511,7 +511,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   </div>
   <div class="login-card">
     <div class="login-desc">Sign in to sync your meals,<br>goals and history across devices.</div>
-    <button id="googleBtn" onclick="signInWithGoogle()">
+    <button id="googleBtn" onclick="signInWithGoogle()" aria-label="Sign in with Google">
       <svg class="g-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continue with Google
     </button>
@@ -618,7 +618,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 
     <!-- SCAN -->
     <div class="panel" id="panel-scan">
-      <div class="scan-back"><button onclick="switchTab('food')">← Back</button></div>
+      <div class="scan-back"><button onclick="switchTab('food')" aria-label="Back to Food">← Back</button></div>
       <div class="scan-wrap">
         <div>
           <div class="field-label">Describe your meal</div>
@@ -639,7 +639,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
         </div>
         <div class="progress-bar" id="scanProgress"><div class="progress-fill"></div></div>
         <div class="status" id="scanStatus"></div>
-        <button class="btn-primary" id="analyzeBtn" onclick="doAnalyze()">↑ &nbsp;Analyze Meal</button>
+        <button class="btn-primary" id="analyzeBtn" onclick="doAnalyze()" aria-label="Analyze meal">↑ &nbsp;Analyze Meal</button>
       </div>
     </div>
 
@@ -647,9 +647,9 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
     <div class="panel" id="panel-calendar">
       <div class="cal-wrap">
         <div class="cal-nav">
-          <button class="cal-arrow" onclick="calShift(-1)">‹</button>
+          <button class="cal-arrow" onclick="calShift(-1)" aria-label="Previous month">‹</button>
           <div class="cal-month" id="calMonthLabel"></div>
-          <button class="cal-arrow" onclick="calShift(1)">›</button>
+          <button class="cal-arrow" onclick="calShift(1)" aria-label="Next month">›</button>
         </div>
         <div class="cal-legend">
           <div class="legend-item"><div class="legend-dot" style="background:var(--lime)"></div>Under goal</div>
@@ -668,7 +668,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
         <div class="day-detail" id="dayDetail">
           <div class="dd-header">
             <div class="dd-date" id="ddDate"></div>
-            <button class="dd-close" onclick="closeDayDetail()">✕</button>
+            <button class="dd-close" onclick="closeDayDetail()" aria-label="Close">✕</button>
           </div>
           <div class="modal-totals" id="ddMacros"></div>
           <div id="ddMeals"></div>
@@ -684,11 +684,11 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
           <div class="sg-title">Daily Goals</div>
           <div class="sg-row">
             <div class="sg-label">Calorie Goal (kcal/day)</div>
-            <input type="number" id="setCalGoal" placeholder="2000" min="500" max="10000">
+            <input type="number" id="setCalGoal" placeholder="2000" min="500" max="10000" aria-label="Calorie goal (kcal/day)">
           </div>
           <div class="sg-row">
             <div class="sg-label">Protein Goal (g/day)</div>
-            <input type="number" id="setProGoal" placeholder="150" min="0" max="500">
+            <input type="number" id="setProGoal" placeholder="150" min="0" max="500" aria-label="Protein goal (g/day)">
           </div>
         </div>
         <div class="settings-group">
@@ -706,12 +706,12 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
           <div class="sg-title">MiniMax API (fallback)</div>
           <div class="sg-row">
             <div class="sg-label">API Key</div>
-            <input type="password" id="setApiKey" placeholder="Your MiniMax API key">
+            <input type="password" id="setApiKey" placeholder="Your MiniMax API key" aria-label="MiniMax API key">
             <div style="font-size:10px;color:var(--mid);margin-top:2px">Stored privately in your account. Only you can access it.</div>
           </div>
           <div class="sg-row">
             <div class="sg-label">Group ID (optional)</div>
-            <input type="text" id="setGroupId" placeholder="Your Group ID">
+            <input type="text" id="setGroupId" placeholder="Your Group ID" aria-label="MiniMax Group ID">
           </div>
         </div>
         <div class="settings-group" id="weightGroup">
@@ -730,8 +730,8 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
           <div class="sg-row">
             <div class="sg-label">Log Today's Weight</div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input type="number" id="weightInput" placeholder="70" step="0.1" min="20" max="300" style="flex:1">
-              <button onclick="logWeight()" class="btn-save" style="width:auto;padding:8px 14px;white-space:nowrap">Log</button>
+              <input type="number" id="weightInput" placeholder="70" step="0.1" min="20" max="300" style="flex:1" aria-label="Body weight">
+              <button onclick="logWeight()" class="btn-save" style="width:auto;padding:8px 14px;white-space:nowrap" aria-label="Log weight">Log</button>
             </div>
           </div>
           <div class="sg-row" id="weightGraphRow" style="display:none">
@@ -761,19 +761,19 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
     <div class="modal-handle"></div>
     <div class="modal-title" id="modalTitle">Edit Meal</div>
     <div style="text-align:center;margin-bottom:4px">
-      <input type="datetime-local" id="modalTimestamp" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--mid);font-size:11px;font-family:'Space Mono',monospace;padding:4px 8px;outline:none">
+      <input type="datetime-local" id="modalTimestamp" aria-label="Meal time" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--mid);font-size:11px;font-family:'Space Mono',monospace;padding:4px 8px;outline:none">
     </div>
     <div class="modal-totals" id="modalTotals"></div>
     <div class="modal-foods" id="modalFoods"></div>
     <div class="edit-nl-box">
       <div class="edit-nl-label">Edit with natural language</div>
       <textarea id="nlInput" rows="2" placeholder="e.g. 'I actually used 2 tbsp olive oil' or 'remove the bread' or 'add 200ml orange juice'"></textarea>
-      <button class="btn-nl" id="nlBtn" onclick="applyNL()">Apply ↵</button>
+      <button class="btn-nl" id="nlBtn" onclick="applyNL()" aria-label="Apply natural language edit">Apply ↵</button>
     </div>
     <div class="modal-btn-row">
-      <button class="btn-modal-save" onclick="saveMealEdit()">Save</button>
-      <button class="btn-modal-del" onclick="deleteMeal()">Delete</button>
-      <button class="btn-modal-close" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal-save" onclick="saveMealEdit()" aria-label="Save meal edits">Save</button>
+      <button class="btn-modal-del" onclick="deleteMeal()" aria-label="Delete meal">Delete</button>
+      <button class="btn-modal-close" onclick="closeModal()" aria-label="Cancel editing">Cancel</button>
     </div>
   </div>
 </div>
@@ -783,9 +783,9 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   <video id="camVideo" autoplay playsinline muted></video>
   <canvas id="capCanvas"></canvas>
   <div class="cam-controls">
-    <button class="cam-btn" onclick="closeCam()">Cancel</button>
-    <button class="shutter" onclick="capPhoto()"></button>
-    <button class="cam-flip" onclick="flipCam()">🔄</button>
+    <button class="cam-btn" onclick="closeCam()" aria-label="Cancel camera">Cancel</button>
+    <button class="shutter" onclick="capPhoto()" aria-label="Take photo"></button>
+    <button class="cam-flip" onclick="flipCam()" aria-label="Flip camera">🔄</button>
   </div>
 </div>
 <input type="file" id="fileInput" accept="image/*">
@@ -1889,8 +1889,8 @@ function renderExerciseCards(exercises) {
     let editSetsHTML = '';
     if (type === 'cardio') {
       editSetsHTML = `<div class="edit-field-row">
-        <label>Distance (km)<input type="number" step="0.1" value="${ex.distance_km||''}" onchange="updateCardioField(${idx},'distance_km',+this.value)"/></label>
-        <label>Duration (min)<input type="number" step="1" value="${ex.duration_min||''}" onchange="updateCardioField(${idx},'duration_min',+this.value)"/></label>
+        <label>Distance (km)<input type="number" step="0.1" value="${ex.distance_km||''}" onchange="updateCardioField(${idx},'distance_km',+this.value)" aria-label="Distance in km"/></label>
+        <label>Duration (min)<input type="number" step="1" value="${ex.duration_min||''}" onchange="updateCardioField(${idx},'duration_min',+this.value)" aria-label="Duration in minutes"/></label>
       </div>`;
     } else if (ex.sets && ex.sets.length) {
       editSetsHTML = ex.sets.map((s, si) => {
@@ -1899,21 +1899,21 @@ function renderExerciseCards(exercises) {
           const dispWt = s.weight_kg != null ? (unit === 'lbs' ? +(s.weight_kg * 2.2046).toFixed(1) : s.weight_kg) : '';
           return `<div class="edit-set-row">
             <span class="edit-set-num">Set ${si+1}</span>
-            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)"/></label>
-            <label>${esc(unit)}<input type="number" min="0" step="0.5" value="${dispWt}" onchange="updateSetFieldWeight(${idx},${si},+this.value)"/></label>
-            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)" aria-label="Reps for set ${si+1}"/></label>
+            <label>${esc(unit)}<input type="number" min="0" step="0.5" value="${dispWt}" onchange="updateSetFieldWeight(${idx},${si},+this.value)" aria-label="Weight for set ${si+1}"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})" aria-label="Delete set ${si+1}">✕</button>
           </div>`;
         } else if (type === 'duration') {
           return `<div class="edit-set-row">
             <span class="edit-set-num">Set ${si+1}</span>
-            <label>Sec<input type="number" min="0" value="${s.duration_sec||s.duration_s||0}" onchange="updateSetField(${idx},${si},'duration_sec',+this.value)"/></label>
-            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+            <label>Sec<input type="number" min="0" value="${s.duration_sec||s.duration_s||0}" onchange="updateSetField(${idx},${si},'duration_sec',+this.value)" aria-label="Duration in seconds for set ${si+1}"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})" aria-label="Delete set ${si+1}">✕</button>
           </div>`;
         } else {
           return `<div class="edit-set-row">
             <span class="edit-set-num">Set ${si+1}</span>
-            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)"/></label>
-            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)" aria-label="Reps for set ${si+1}"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})" aria-label="Delete set ${si+1}">✕</button>
           </div>`;
         }
       }).join('');
@@ -1931,8 +1931,8 @@ function renderExerciseCards(exercises) {
       <div class="exercise-sets">${setsHTML}</div>
       <div class="exercise-edit-panel">
         ${editSetsHTML}
-        ${type !== 'cardio' ? `<button class="edit-add-set" onclick="addSetInline(${idx})">+ Add Set</button>` : ''}
-        <button class="edit-del-ex" onclick="deleteExerciseInline(${idx})">Delete Exercise</button>
+        ${type !== 'cardio' ? `<button class="edit-add-set" onclick="addSetInline(${idx})" aria-label="Add set">+ Add Set</button>` : ''}
+        <button class="edit-del-ex" onclick="deleteExerciseInline(${idx})" aria-label="Delete exercise">Delete Exercise</button>
       </div>
     </div>`;
   }).join('');
@@ -2286,7 +2286,7 @@ function renderWeightGraph(rangeDays) {
       return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--mid);padding:4px 0;border-top:1px solid var(--border)">
         <span style="font-family:'IBM Plex Mono',monospace">${e.date}</span>
         <span style="color:var(--text);font-family:'Playfair Display',serif;font-size:13px">${disp} ${unit}</span>
-        <button onclick="deleteWeightEntry('${e.date}')" style="background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:13px;padding:0 4px">✕</button>
+        <button onclick="deleteWeightEntry('${e.date}')" style="background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:13px;padding:0 4px" aria-label="Delete entry for ${e.date}">✕</button>
       </div>`;
     }).join('');
   }
