@@ -1431,18 +1431,38 @@ async function deleteMeal() {
 async function applyNL() {
   const instruction = document.getElementById('nlInput').value.trim();
   if (!instruction) return;
+  if (!SYSTEM_PROMPT_EDIT) { showToast('Still loading — try again', 'error'); return; }
 
   const btn = document.getElementById('nlBtn');
+  if (btn.disabled) return;
   btn.disabled = true; btn.textContent = '…';
 
   const currentData = JSON.stringify(G.editingMealData.foods);
-
   const sys = SYSTEM_PROMPT_EDIT.replace('{{currentData}}', currentData);
 
   try {
     const result = await callAI(null, null, '', sys, `User instruction: "${instruction}"`);
-    G.editingMealData.foods = result.foods || G.editingMealData.foods;
-    G.editingMealData.totals = result.totals || G.editingMealData.totals;
+
+    // clamp negatives, recompute totals from foods to prevent mismatch
+    const foods = (result.foods && result.foods.length ? result.foods : G.editingMealData.foods)
+      .map(f => ({
+        ...f,
+        calories: Math.max(0, f.calories || 0),
+        protein_g: Math.max(0, f.protein_g || 0),
+        carbs_g: Math.max(0, f.carbs_g || 0),
+        fat_g: Math.max(0, f.fat_g || 0),
+        fiber_g: Math.max(0, f.fiber_g || 0),
+      }));
+    const totals = foods.reduce((a, f) => ({
+      calories: a.calories + f.calories,
+      protein_g: a.protein_g + f.protein_g,
+      carbs_g: a.carbs_g + f.carbs_g,
+      fat_g: a.fat_g + f.fat_g,
+      fiber_g: a.fiber_g + f.fiber_g,
+    }), { calories:0, protein_g:0, carbs_g:0, fat_g:0, fiber_g:0 });
+
+    G.editingMealData.foods = foods;
+    G.editingMealData.totals = totals;
     if (result.hidden_calories_notes) G.editingMealData.hiddenNotes = result.hidden_calories_notes;
     renderModal();
     document.getElementById('nlInput').value = '';
