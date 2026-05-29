@@ -1,14 +1,13 @@
+functionsDirectory = "/Users/ish/_Projects/macrolens/netlify/functions"
+functionsDirectoryOrigin = "default"
 plugins = []
 headers = []
 redirects = []
 
-[functions]
-
-[functions."*"]
-
 [build]
 publish = "/Users/ish/_Projects/macrolens"
 publishOrigin = "default"
+functions = "/Users/ish/_Projects/macrolens/netlify/functions"
 
 [build.environment]
 
@@ -23,3 +22,7 @@ publishOrigin = "default"
 [build.processing.js]
 
 [build.services]
+
+[functions]
+
+[functions."*"]
