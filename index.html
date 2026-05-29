@@ -736,6 +736,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
               <button class="weight-range-btn" data-range="0" onclick="setWeightRange(this,0)">All</button>
             </div>
             <div id="weightGraph"></div>
+            <div id="weightEntryList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
           </div>
         </div>
         <button class="btn-save" onclick="saveSettings()">Save Settings</button>
@@ -948,9 +949,19 @@ async function saveWorkout(dateStr, exercises) {
     date: dateStr, exercises, updatedAt: new Date().toISOString()
   });
 }
-async function saveWeightEntry(kg) {
-  G.weightLog.push({ date: TODAY(), kg });
+async function saveWeightEntry(kg, date) {
+  date = date || TODAY();
+  const idx = G.weightLog.findIndex(e => e.date === date);
+  if (idx >= 0) G.weightLog[idx].kg = kg;
+  else G.weightLog.push({ date, kg });
+  G.weightLog.sort((a, b) => a.date.localeCompare(b.date));
   await db.collection('users').doc(G.user.id).collection('weight').doc('log').set({ entries: G.weightLog });
+}
+
+async function deleteWeightEntry(date) {
+  G.weightLog = G.weightLog.filter(e => e.date !== date);
+  await db.collection('users').doc(G.user.id).collection('weight').doc('log').set({ entries: G.weightLog });
+  renderWeightGraph(G.weightRange);
 }
 
 async function loadMoreMeals() {
@@ -1759,9 +1770,10 @@ function updateMuscleMap(exercises) {
       } else if (ex.sets && ex.sets.length) {
         ex.sets.forEach(s => {
           const reps = s.reps || (s.duration_sec || s.duration_s || 0) / 4;
-          // null weight = bodyweight exercise; use 70kg proxy so pull-ups/dips
-          // register comparably to lightly weighted exercises
-          const wt = s.weight_kg != null ? s.weight_kg : 70;
+          // null weight = bodyweight exercise; use logged bodyweight or 70kg fallback
+          const bw = (G.weightLog && G.weightLog.length)
+            ? G.weightLog[G.weightLog.length - 1].kg : 70;
+          const wt = s.weight_kg != null ? s.weight_kg : bw;
           vol[m] += reps * wt;
         });
       }
@@ -2249,6 +2261,25 @@ function renderWeightGraph(rangeDays) {
       <text x="${PADL}" y="${H-4}" fill="#666" font-size="7" font-family="IBM Plex Mono, monospace">${first}</text>
       <text x="${W-PADR}" y="${H-4}" fill="#666" font-size="7" font-family="IBM Plex Mono, monospace" text-anchor="end">${last}</text>
     </svg>`;
+
+  // entry list — most recent first, delete button per row
+  const listEl = document.getElementById('weightEntryList');
+  if (listEl) {
+    const recent = [...entries].reverse().slice(0, 10);
+    listEl.innerHTML = recent.map(e => {
+      const disp = Math.round(conv(e.kg) * 10) / 10;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--mid);padding:4px 0;border-top:1px solid var(--border)">
+        <span style="font-family:'IBM Plex Mono',monospace">${e.date}</span>
+        <span style="color:var(--text);font-family:'Playfair Display',serif;font-size:13px">${disp} ${unit}</span>
+        <button onclick="deleteWeightEntry('${e.date}')" style="background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:13px;padding:0 4px">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // pre-fill input with today's logged value if any
+  const todayEntry = entries.find(e => e.date === TODAY());
+  const input = document.getElementById('weightInput');
+  if (input && todayEntry) input.placeholder = String(Math.round(conv(todayEntry.kg) * 10) / 10);
 }
 
 </script>
