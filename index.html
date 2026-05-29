@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LifeMog">
 <meta name="theme-color" content="#080808">
+<link rel="manifest" href="/manifest.json">
 <title>LifeMog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -104,11 +105,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',mon
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .panel{display:none;padding-bottom:calc(var(--safe-b) + 20px)}
 .panel.active{display:block}
-#panel-today{overflow:hidden}
-#todaySlide{will-change:transform}
+#panel-food{overflow:hidden}
+#foodSlide{will-change:transform}
 
-/* ── TODAY PANEL ── */
-.today-hero{
+/* ── FOOD PANEL ── */
+.food-hero{
   padding:20px;
   display:flex;flex-direction:column;gap:20px;
 }
@@ -521,23 +522,23 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   <div class="topbar">
     <div class="topbar-logo">Life<em>Mog</em></div>
     <div class="topbar-right">
-      <div class="avatar" id="avatarBtn" onclick="switchTab('settings')">
+      <div class="avatar" id="avatarBtn" onclick="switchTab('settings')" role="button" aria-label="Profile and settings" tabindex="0">
         <span id="avatarInitial">?</span>
       </div>
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab" data-tab="workout" onclick="switchTab('workout')">Workout</button>
-    <button class="tab active" data-tab="today" onclick="switchTab('today')">Food</button>
-    <button class="tab" data-tab="calendar" onclick="switchTab('calendar')">Calendar</button>
+  <div class="tabs" role="tablist">
+    <button class="tab" data-tab="workout" onclick="switchTab('workout')" role="tab" aria-selected="false" aria-controls="panel-workout">Workout</button>
+    <button class="tab active" data-tab="food" onclick="switchTab('food')" role="tab" aria-selected="true" aria-controls="panel-food">Food</button>
+    <button class="tab" data-tab="calendar" onclick="switchTab('calendar')" role="tab" aria-selected="false" aria-controls="panel-calendar">Calendar</button>
   </div>
 
   <div class="scroll">
     <!-- TODAY -->
-    <div class="panel active" id="panel-today">
-      <div id="todaySlide">
-      <div class="today-hero">
+    <div class="panel active" id="panel-food">
+      <div id="foodSlide">
+      <div class="food-hero">
         <div class="ring-row">
           <div class="ring-wrap">
             <svg class="ring-svg" viewBox="0 0 100 100">
@@ -564,17 +565,17 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
         </div>
         <div class="macro-strip">
           <div class="macro-pill p">
-            <div class="mpill-val" id="todayP">0</div>
+            <div class="mpill-val" id="foodP">0</div>
             <div class="mpill-label">Protein</div>
             <div class="mpill-unit">grams</div>
           </div>
           <div class="macro-pill c">
-            <div class="mpill-val" id="todayC">0</div>
+            <div class="mpill-val" id="foodC">0</div>
             <div class="mpill-label">Carbs</div>
             <div class="mpill-unit">grams</div>
           </div>
           <div class="macro-pill f">
-            <div class="mpill-val" id="todayF">0</div>
+            <div class="mpill-val" id="foodF">0</div>
             <div class="mpill-label">Fat</div>
             <div class="mpill-unit">grams</div>
           </div>
@@ -583,8 +584,8 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
       <div class="meals-header">
         <div class="meals-title" id="mealsDayTitle">Today's Meals</div>
       </div>
-      <div id="todayMealsList"></div>
-      </div><!-- /todaySlide -->
+      <div id="foodMealsList"></div>
+      </div><!-- /foodSlide -->
     </div>
 
     <!-- WORKOUT -->
@@ -601,17 +602,17 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
         <div class="workout-status" id="workoutStatus"></div>
       </div>
       <div class="workout-chat-bar">
-        <input type="text" id="workoutChatInput" placeholder="bench 3x8 80kg, ran 5k, pull-ups 3x10…" autocomplete="off">
-        <button class="workout-send-btn" id="workoutSendBtn" onclick="sendWorkoutChat()">↑</button>
+        <input type="text" id="workoutChatInput" placeholder="bench 3x8 80kg, ran 5k, pull-ups 3x10…" autocomplete="off" aria-label="Log exercises">
+        <button class="workout-send-btn" id="workoutSendBtn" onclick="sendWorkoutChat()" aria-label="Submit workout">↑</button>
       </div>
     </div>
 
     <!-- FAB -->
-    <button class="fab" id="fabAdd" onclick="switchTab('scan')" title="Log meal">+</button>
+    <button class="fab" id="fabAdd" onclick="switchTab('scan')" aria-label="Log meal">+</button>
 
     <!-- SCAN -->
     <div class="panel" id="panel-scan">
-      <div class="scan-back"><button onclick="switchTab('today')">← Back</button></div>
+      <div class="scan-back"><button onclick="switchTab('food')">← Back</button></div>
       <div class="scan-wrap">
         <div>
           <div class="field-label">Describe your meal</div>
@@ -861,7 +862,7 @@ auth.onAuthStateChanged(async (user) => {
       document.getElementById('app').classList.remove('hidden');
       renderAvatar();
       renderSettings();
-      renderToday();
+      renderFood();
       renderCalendar();
       document.getElementById('fabAdd').classList.add('visible');
     } catch (e) {
@@ -881,14 +882,14 @@ auth.onAuthStateChanged(async (user) => {
 function renderAvatar() {
   const el = document.getElementById('avatarBtn');
   if (G.user.picture) {
-    el.innerHTML = `<img src="${G.user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+    el.innerHTML = `<img src="${esc(G.user.picture)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`;
   } else {
-    el.innerHTML = `<span style="font-size:13px">${G.user.name.charAt(0).toUpperCase()}</span>`;
+    el.innerHTML = `<span style="font-size:13px">${esc(G.user.name.charAt(0).toUpperCase())}</span>`;
   }
   const pr = document.getElementById('profileRow');
   pr.innerHTML = `
     <div style="width:48px;height:48px;border-radius:50%;border:2px solid var(--border2);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">
-      ${G.user.picture ? `<img src="${G.user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : G.user.name.charAt(0)}
+      ${G.user.picture ? `<img src="${esc(G.user.picture)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">` : esc(G.user.name.charAt(0))}
     </div>
     <div>
       <div class="profile-name">${esc(G.user.name)}</div>
@@ -975,8 +976,10 @@ async function loadMoreMeals() {
     G.log = G.log.concat(snap.docs.map(d => d.data()));
     G.lastMealDoc = snap.docs.length === 100 ? snap.docs[snap.docs.length - 1] : null;
     const activeTab = document.querySelector('.tab.active')?.dataset.tab;
-    if (activeTab === 'today') renderToday();
+    if (activeTab === 'food') renderFood();
     else renderCalendar();
+  } catch (e) {
+    showToast('Failed to load older meals: ' + e.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'LOAD OLDER DATA'; }
   }
@@ -991,18 +994,22 @@ async function removeMealFromDB(mealId) {
 }
 
 async function saveSettingsStore() {
-  await db.collection('users').doc(G.user.id).set(G.settings);
+  await db.collection('users').doc(G.user.id).set(G.settings, { merge: true });
 }
 
 // ════════════════════════════════════════════════════════════
 // TABS
 // ════════════════════════════════════════════════════════════
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab').forEach(t => {
+    const active = t.dataset.tab === name;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active);
+  });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
-  document.getElementById('fabAdd').classList.toggle('visible', name === 'today');
-  if (name === 'today') renderToday();
+  document.getElementById('fabAdd').classList.toggle('visible', name === 'food');
+  if (name === 'food') renderFood();
   if (name === 'calendar') renderCalendar();
   if (name === 'workout') renderWorkout();
   if (name === 'settings') renderWeightGraph(G.weightRange);
@@ -1013,7 +1020,7 @@ function switchTab(name) {
 // ════════════════════════════════════════════════════════════
 function viewDateStr() { return G.viewDate || TODAY(); }
 
-function todayMeals() {
+function foodMeals() {
   return G.log.filter(m => m.date === viewDateStr());
 }
 
@@ -1023,7 +1030,7 @@ function shiftViewDate(delta) {
   const str = d.toISOString().slice(0, 10);
   if (str > TODAY()) return;
   G.viewDate = (str === TODAY()) ? null : str;
-  renderToday();
+  renderFood();
 }
 
 function dayMeals(dateStr) {
@@ -1040,8 +1047,8 @@ function sumMacros(meals) {
   }, {cal:0, p:0, c:0, f:0});
 }
 
-function renderToday() {
-  const meals = todayMeals();
+function renderFood() {
+  const meals = foodMeals();
   const sums = sumMacros(meals);
   const goal = G.settings.calorieGoal || 2000;
   const vd = viewDateStr();
@@ -1078,12 +1085,12 @@ function renderToday() {
   document.getElementById('macroBarC').style.width = Math.min(sums.c / 250, 1) * 100 + '%';
   document.getElementById('macroBarF').style.width = Math.min(sums.f / 80, 1) * 100 + '%';
 
-  document.getElementById('todayP').textContent = Math.round(sums.p);
-  document.getElementById('todayC').textContent = Math.round(sums.c);
-  document.getElementById('todayF').textContent = Math.round(sums.f);
+  document.getElementById('foodP').textContent = Math.round(sums.p);
+  document.getElementById('foodC').textContent = Math.round(sums.c);
+  document.getElementById('foodF').textContent = Math.round(sums.f);
 
   // Meals list
-  const list = document.getElementById('todayMealsList');
+  const list = document.getElementById('foodMealsList');
   if (meals.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="empty-ico">🍽</div><div class="empty-txt">${isToday ? 'No meals logged today.<br>Tap + to start.' : 'No meals logged this day.'}</div></div>`;
     return;
@@ -1226,8 +1233,8 @@ async function doAnalyze() {
     clearSlot(0); clearSlot(1);
     document.getElementById('ctxInput').value='';
     G.viewDate = null;
-    switchTab('today');
-    // Show toast on today tab so user sees it after tab switch
+    switchTab('food');
+    // Show toast on food tab so user sees it after tab switch
     if (conf < 50) {
       showToast(`⚠ Very low confidence (${conf}%) — tap the meal to review`, 'error');
     } else if (conf < 70) {
@@ -1390,7 +1397,7 @@ async function saveMealEdit() {
     }
   }
   closeModal();
-  renderToday();
+  renderFood();
   renderCalendar();
   if (G.openDayStr) calDayClick(G.openDayStr);
 }
@@ -1406,7 +1413,7 @@ async function deleteMeal() {
     return;
   }
   closeModal();
-  renderToday();
+  renderFood();
   renderCalendar();
 }
 
@@ -1559,15 +1566,15 @@ async function saveSettings() {
   } catch (e) {
     s.textContent = 'Save failed. Check connection.'; s.className = 'status err';
   }
-  renderToday();
+  renderFood();
 }
 
 // ════════════════════════════════════════════════════════════
 // SWIPE TO NAVIGATE DAYS
 // ════════════════════════════════════════════════════════════
 (function() {
-  const panel = document.getElementById('panel-today');
-  const slide = document.getElementById('todaySlide');
+  const panel = document.getElementById('panel-food');
+  const slide = document.getElementById('foodSlide');
   const EASE = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)';
   let sx = 0, sy = 0, tracking = false, animating = false;
 
