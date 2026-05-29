@@ -2238,6 +2238,23 @@ function renderWeightGraph(rangeDays) {
   const entries = G.weightLog || [];
   if (entries.length < 1) { row.style.display = 'none'; return; }
   row.style.display = 'flex';
+  const unit = G.settings.weightUnit || 'kg';
+  const conv = v => unit === 'lbs' ? v * 2.2046 : v;
+
+  // entry list — always render regardless of entry count
+  const listEl = document.getElementById('weightEntryList');
+  if (listEl) {
+    const recent = [...entries].reverse().slice(0, 10);
+    listEl.innerHTML = recent.map(e => {
+      const disp = Math.round(conv(e.kg) * 10) / 10;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--mid);padding:4px 0;border-top:1px solid var(--border)">
+        <span style="font-family:'IBM Plex Mono',monospace">${e.date}</span>
+        <span style="color:var(--text);font-family:'Playfair Display',serif;font-size:13px">${disp} ${unit}</span>
+        <button onclick="deleteWeightEntry('${e.date}')" style="background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:13px;padding:0 4px" aria-label="Delete entry for ${e.date}">✕</button>
+      </div>`;
+    }).join('');
+  }
+
   if (entries.length < 2) {
     graph.innerHTML = `<div style="font-size:10px;color:var(--mid);padding:8px 0">Log at least 2 entries to see graph.</div>`;
     return;
@@ -2248,8 +2265,6 @@ function renderWeightGraph(rangeDays) {
     graph.innerHTML = `<div style="font-size:10px;color:var(--mid);padding:8px 0">Not enough data in this range.</div>`;
     return;
   }
-  const unit = G.settings.weightUnit || 'kg';
-  const conv = v => unit === 'lbs' ? v * 2.2046 : v;
   const ys = data.map(d => conv(d.kg));
   const minY = Math.min(...ys), maxY = Math.max(...ys);
   const pad = (maxY - minY) * 0.1 || 1;
@@ -2293,20 +2308,6 @@ function renderWeightGraph(rangeDays) {
       <text x="${PADL}" y="${H-4}" fill="#666" font-size="7" font-family="IBM Plex Mono, monospace">${first}</text>
       <text x="${W-PADR}" y="${H-4}" fill="#666" font-size="7" font-family="IBM Plex Mono, monospace" text-anchor="end">${last}</text>
     </svg>`;
-
-  // entry list — most recent first, delete button per row
-  const listEl = document.getElementById('weightEntryList');
-  if (listEl) {
-    const recent = [...entries].reverse().slice(0, 10);
-    listEl.innerHTML = recent.map(e => {
-      const disp = Math.round(conv(e.kg) * 10) / 10;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--mid);padding:4px 0;border-top:1px solid var(--border)">
-        <span style="font-family:'IBM Plex Mono',monospace">${e.date}</span>
-        <span style="color:var(--text);font-family:'Playfair Display',serif;font-size:13px">${disp} ${unit}</span>
-        <button onclick="deleteWeightEntry('${e.date}')" style="background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:13px;padding:0 4px" aria-label="Delete entry for ${e.date}">✕</button>
-      </div>`;
-    }).join('');
-  }
 
   // pre-fill input with today's logged value if any
   const todayEntry = entries.find(e => e.date === TODAY());
