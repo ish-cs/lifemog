@@ -1398,10 +1398,10 @@ async function saveSettings() {
     slide.addEventListener('transitionend', () => { slide.style.transition = ''; }, {once: true});
   }
 
-  function commitSwipe(delta, W) {
+  function commitSwipe(delta, W, dir) {
     animating = true;
-    const exitX = delta < 0 ? -W : W;
-    const enterX = delta < 0 ? W : -W;
+    const exitX = dir * W;
+    const enterX = -dir * W;
     slide.style.transition = EASE;
     slide.style.transform = `translateX(${exitX}px)`;
     slide.addEventListener('transitionend', () => {
@@ -1446,7 +1446,7 @@ async function saveSettings() {
     // Block future
     if (dx < 0 && !G.viewDate) { snapBack(); return; }
     if (Math.abs(dx) > W * 0.25) {
-      commitSwipe(delta, W);
+      commitSwipe(delta, W, dx > 0 ? 1 : -1);
     } else {
       snapBack();
     }
