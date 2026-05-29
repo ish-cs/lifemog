@@ -1754,23 +1754,31 @@ function updateMuscleMap(exercises) {
     ex.muscles.forEach(m => {
       if (vol[m] === undefined) return;
       if (ex.distance_km != null) {
-        vol[m] += (ex.distance_km || 0) * 10; // cardio proxy
+        // cardio: scale by distance, moderate intensity proxy
+        vol[m] += (ex.distance_km || 0) * 70;
       } else if (ex.sets && ex.sets.length) {
         ex.sets.forEach(s => {
-          const reps = s.reps || (s.duration_sec || s.duration_s || 0) / 5;
-          const wt = s.weight_kg != null ? s.weight_kg : 1;
+          const reps = s.reps || (s.duration_sec || s.duration_s || 0) / 4;
+          // null weight = bodyweight exercise; use 70kg proxy so pull-ups/dips
+          // register comparably to lightly weighted exercises
+          const wt = s.weight_kg != null ? s.weight_kg : 70;
           vol[m] += reps * wt;
         });
       }
     });
   });
 
-  const maxVol = Math.max(...Object.values(vol), 1);
+  // Use sqrt to compress range — prevents one heavy compound lift from
+  // washing out everything else on the map
+  const sqrtVol = {};
+  MUSCLE_IDS.forEach(m => sqrtVol[m] = Math.sqrt(vol[m]));
+  const maxSqrt = Math.max(...Object.values(sqrtVol), 1);
+
   MUSCLE_IDS.forEach(m => {
-    const ratio = vol[m] / maxVol;
+    const ratio = sqrtVol[m] / maxSqrt;
     let fill = '#1a1a1a';
-    if (ratio >= 0.7) fill = '#5ab82a';
-    else if (ratio >= 0.35) fill = '#3a7a1a';
+    if (ratio >= 0.65) fill = '#5ab82a';
+    else if (ratio >= 0.3) fill = '#3a7a1a';
     else if (ratio > 0) fill = '#2a4a1a';
     mapEl.querySelectorAll('[id^="muscle-' + m + '"]').forEach(el => el.setAttribute('fill', fill));
   });
