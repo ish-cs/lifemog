@@ -816,7 +816,7 @@ let G = {
   goalHistory: [],  // [{ date, calorieGoal, proteinGoal }] — sorted asc, one entry per goal change
   log: [],          // array of meal entries
   analyzing: false,
-  lastMealDoc: null,
+  lastMealDoc: null, loadingMore: false, savingSettings: false,
   openDayStr: null,
   viewDate: null,   // null = today; YYYY-MM-DD string = browsing past day
   photos: [null,null],
@@ -970,7 +970,8 @@ async function deleteWeightEntry(date) {
 }
 
 async function loadMoreMeals() {
-  if (!G.lastMealDoc) return;
+  if (!G.lastMealDoc || G.loadingMore) return;
+  G.loadingMore = true;
   const btn = document.getElementById('calLoadMore');
   if (btn) { btn.disabled = true; btn.textContent = 'LOADING…'; }
   try {
@@ -984,6 +985,7 @@ async function loadMoreMeals() {
   } catch (e) {
     showToast('Failed to load older meals: ' + e.message, 'error');
   } finally {
+    G.loadingMore = false;
     if (btn) { btn.disabled = false; btn.textContent = 'LOAD OLDER DATA'; }
   }
 }
@@ -1226,7 +1228,7 @@ async function doAnalyze() {
       resizeDataUrl(thumbSource, 200, t => resolve(t), 0.7);
     });
     const meal = {
-      id: Date.now().toString(),
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       date: TODAY(),
       ts: new Date().toISOString(),
       thumb,
@@ -1582,12 +1584,18 @@ function renderSettings() {
 }
 
 async function saveSettings() {
+  if (G.savingSettings) return;
+  G.savingSettings = true;
   const cal = parseInt(document.getElementById('setCalGoal').value);
   const pro = parseInt(document.getElementById('setProGoal').value);
   const newCal = (!isNaN(cal) && cal >= 500 && cal <= 10000) ? cal : 2000;
   const newPro = (!isNaN(pro) && pro >= 0 && pro <= 500) ? pro : 150;
   if (newCal !== G.settings.calorieGoal || newPro !== G.settings.proteinGoal) {
-    G.goalHistory.push({ date: TODAY(), calorieGoal: newCal, proteinGoal: newPro });
+    const today = TODAY();
+    // replace same-day entry if exists, else push
+    const idx = G.goalHistory.findIndex(e => e.date === today);
+    const entry = { date: today, calorieGoal: newCal, proteinGoal: newPro };
+    if (idx >= 0) G.goalHistory[idx] = entry; else G.goalHistory.push(entry);
     G.goalHistory.sort((a, b) => a.date.localeCompare(b.date));
   }
   G.settings.calorieGoal = newCal;
@@ -1602,6 +1610,8 @@ async function saveSettings() {
     s.textContent = 'Saved.'; setTimeout(()=>s.textContent='', 2000);
   } catch (e) {
     s.textContent = 'Save failed. Check connection.'; s.className = 'status err';
+  } finally {
+    G.savingSettings = false;
   }
   renderFood();
 }
@@ -2225,7 +2235,7 @@ document.addEventListener('keydown', e => {
 async function logWeight() {
   const el = document.getElementById('weightInput');
   const v = parseFloat(el.value);
-  if (isNaN(v) || v < 20 || v > 600) { alert('Enter a valid weight.'); return; }
+  if (isNaN(v) || v < 20 || v > 600) { showToast('Enter a valid weight (20–600)', 'error'); return; }
   const unit = G.settings.weightUnit || 'kg';
   const kg = unit === 'lbs' ? v / 2.2046 : v;
   try {
