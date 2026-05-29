@@ -1941,8 +1941,8 @@ function deleteSetInline(exIdx, setIdx) {
   const ex = getExercise(exIdx);
   if (!ex || !ex.sets) return;
   ex.sets.splice(setIdx, 1);
+  const dateStr = workoutViewDateStr();
   renderExerciseCards(G.workouts[dateStr].exercises);
-  // re-open edit panel
   setTimeout(() => toggleExerciseEdit(exIdx), 0);
   _saveInlineWorkout();
 }
@@ -1952,6 +1952,7 @@ function addSetInline(exIdx) {
   if (!ex || !ex.sets) return;
   const last = ex.sets[ex.sets.length - 1];
   ex.sets.push(last ? {...last} : {reps: 0, weight_kg: null});
+  const dateStr = workoutViewDateStr();
   renderExerciseCards(G.workouts[dateStr].exercises);
   setTimeout(() => toggleExerciseEdit(exIdx), 0);
   _saveInlineWorkout();
