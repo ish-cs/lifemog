@@ -407,6 +407,76 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 #capCanvas{display:none}
 #fileInput{display:none}
 
+/* ── WORKOUT PANEL ── */
+#panel-workout{overflow-x:hidden;padding-bottom:0}
+#workoutSlide{will-change:transform;padding-bottom:calc(80px + var(--safe-b))}
+.workout-header{padding:20px;display:flex;align-items:center;justify-content:center}
+.workout-day-title{font-size:10px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase}
+.workout-list-header{padding:0 20px 10px;display:flex;align-items:center;justify-content:space-between}
+.workout-list-label{font-size:10px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase}
+#muscleMap{padding:0 20px 16px;display:flex;justify-content:center}
+#muscleMap svg{width:100%;max-width:320px;height:auto}
+.workout-chat-bar{
+  position:sticky;bottom:0;left:0;right:0;
+  padding:10px 16px calc(10px + var(--safe-b));
+  background:var(--bg);border-top:1px solid var(--border);
+  display:flex;gap:8px;z-index:10;
+}
+#workoutChatInput{
+  flex:1;background:var(--s1);border:1.5px solid var(--border);border-radius:20px;
+  color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;
+  padding:10px 14px;outline:none;transition:border-color 0.2s;
+}
+#workoutChatInput:focus{border-color:var(--lime)}
+.workout-send-btn{
+  width:40px;height:40px;border-radius:50%;background:var(--lime);border:none;
+  color:#000;font-size:18px;font-weight:bold;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.workout-send-btn:disabled{opacity:0.35;cursor:not-allowed}
+.exercise-card{
+  margin:0 20px 10px;background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;padding:14px;
+}
+.exercise-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer}
+.exercise-edit-chevron{font-size:18px;color:var(--dim);transition:transform 0.2s;flex-shrink:0}
+.exercise-card.edit-open .exercise-edit-chevron{transform:rotate(90deg)}
+.exercise-edit-panel{display:none;padding-top:10px;border-top:1px solid var(--border);margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.exercise-card:not(.edit-open) .exercise-edit-panel{display:none}
+.exercise-card.edit-open .exercise-edit-panel{display:flex}
+.edit-set-row{display:flex;align-items:center;gap:8px;font-size:11px}
+.edit-set-num{font-size:9px;color:var(--dim);width:36px;letter-spacing:0.08em;text-transform:uppercase;flex-shrink:0}
+.edit-set-row label,.edit-field-row label{display:flex;flex-direction:column;font-size:9px;color:var(--dim);letter-spacing:0.06em;text-transform:uppercase;gap:3px}
+.edit-set-row input,.edit-field-row input{background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-size:13px;width:64px;font-family:inherit}
+.edit-field-row{display:flex;gap:12px}
+.edit-del-set{background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:14px;padding:0 4px;margin-left:auto}
+.edit-add-set{background:var(--s2);border:1px solid var(--border);color:var(--lime);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;letter-spacing:0.06em}
+.edit-del-ex{background:none;border:1px solid var(--red,#f55);color:var(--red,#f55);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;letter-spacing:0.06em}
+.exercise-emoji{
+  font-size:24px;width:40px;height:40px;background:var(--s2);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.exercise-name{font-size:14px;color:var(--text);flex:1}
+.exercise-muscles{font-size:9px;color:var(--mid);letter-spacing:0.08em;text-transform:uppercase}
+.exercise-sets{display:flex;flex-direction:column;gap:4px}
+.exercise-set-row{
+  display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mid);
+  padding:4px 0;border-top:1px solid var(--border);
+}
+.set-num{font-size:9px;color:var(--dim);width:36px;letter-spacing:0.08em;text-transform:uppercase}
+.set-detail{font-family:'Playfair Display',serif;color:var(--text);font-size:14px}
+.workout-empty{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.workout-status{font-size:10px;color:var(--mid);text-align:center;min-height:14px;padding:0 16px 8px}
+.workout-status.err{color:var(--red)}
+
+/* weight log buttons */
+.weight-range-btn{
+  background:var(--s2);border:1px solid var(--border);border-radius:6px;
+  color:var(--mid);font-family:'IBM Plex Mono',monospace;font-size:9px;
+  letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;cursor:pointer;
+}
+.weight-range-btn.active{border-color:var(--lime);color:var(--lime)}
+
 /* ── MISC ── */
 .section-sep{height:1px;background:var(--border);margin:0 20px}
 .empty-state{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -516,7 +586,21 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 
     <!-- WORKOUT -->
     <div class="panel" id="panel-workout">
-      <div class="empty-state" style="margin-top:60px"><div class="empty-ico">🏋️</div><div class="empty-txt">Workout tracking<br>coming soon.</div></div>
+      <div id="workoutSlide">
+        <div class="workout-header">
+          <div class="workout-day-title" id="workoutDayTitle">Today's Workout</div>
+        </div>
+        <div id="muscleMap"></div>
+        <div class="workout-list-header">
+          <div class="workout-list-label">Exercises</div>
+        </div>
+        <div id="workoutExerciseList"></div>
+        <div class="workout-status" id="workoutStatus"></div>
+      </div>
+      <div class="workout-chat-bar">
+        <input type="text" id="workoutChatInput" placeholder="bench 3x8 80kg, ran 5k, pull-ups 3x10…" autocomplete="off">
+        <button class="workout-send-btn" id="workoutSendBtn" onclick="sendWorkoutChat()">↑</button>
+      </div>
     </div>
 
     <!-- FAB -->
@@ -620,6 +704,38 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
             <input type="text" id="setGroupId" placeholder="Your Group ID">
           </div>
         </div>
+        <div class="settings-group" id="weightGroup">
+          <div class="sg-title">Body Weight</div>
+          <div class="sg-row">
+            <div class="sg-label">Unit</div>
+            <div style="display:flex;gap:12px;padding:4px 0">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--mid)">
+                <input type="radio" name="weightUnit" id="weightUnitKg" value="kg"> kg
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--mid)">
+                <input type="radio" name="weightUnit" id="weightUnitLbs" value="lbs"> lbs
+              </label>
+            </div>
+          </div>
+          <div class="sg-row">
+            <div class="sg-label">Log Today's Weight</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="number" id="weightInput" placeholder="70" step="0.1" min="20" max="300" style="flex:1">
+              <button onclick="logWeight()" class="btn-save" style="width:auto;padding:8px 14px;white-space:nowrap">Log</button>
+            </div>
+          </div>
+          <div class="sg-row" id="weightGraphRow" style="display:none">
+            <div class="sg-label" style="margin-bottom:8px">Weight History</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px" id="weightRangeSelector">
+              <button class="weight-range-btn active" data-range="30" onclick="setWeightRange(this,30)">30d</button>
+              <button class="weight-range-btn" data-range="90" onclick="setWeightRange(this,90)">3M</button>
+              <button class="weight-range-btn" data-range="180" onclick="setWeightRange(this,180)">6M</button>
+              <button class="weight-range-btn" data-range="365" onclick="setWeightRange(this,365)">1Y</button>
+              <button class="weight-range-btn" data-range="0" onclick="setWeightRange(this,0)">All</button>
+            </div>
+            <div id="weightGraph"></div>
+          </div>
+        </div>
         <button class="btn-save" onclick="saveSettings()">Save Settings</button>
         <div class="status" id="settingsStatus"></div>
         <button class="btn-danger" onclick="signOut()">Sign Out</button>
@@ -670,8 +786,10 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 // ════════════════════════════════════════════════════════════
 let SYSTEM_PROMPT = null;
 let SYSTEM_PROMPT_EDIT = null;
+let SYSTEM_PROMPT_WORKOUT = null;
 fetch('/prompt.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT = t.trim(); }).catch(() => {});
 fetch('/prompt-edit.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT_EDIT = t.trim(); }).catch(() => {});
+fetch('/prompt-workout.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT_WORKOUT = t.trim(); }).catch(() => {});
 
 firebase.initializeApp({
   apiKey: "AIzaSyB45pdSTdV98fmrgeDoQgrkcF-Rg9s1xN4",
@@ -703,6 +821,11 @@ let G = {
   editingMealData: null,  // live copy being edited in modal
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth(),
+  workoutViewDate: null,
+  workouts: {},
+  workoutLoading: false,
+  weightLog: [],
+  weightRange: 30,
 };
 
 if ('serviceWorker' in navigator) {
@@ -792,14 +915,40 @@ async function loadUserData() {
       apiKey: d.apiKey || '',
       groupId: d.groupId || '',
       forceMinimax: d.forceMinimax || false,
+      weightUnit: d.weightUnit || 'kg',
     };
   } else {
-    G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '', forceMinimax: false };
+    G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '', forceMinimax: false, weightUnit: 'kg' };
     await userRef.set(G.settings);
   }
   const mealsSnap = await userRef.collection('meals').orderBy('ts', 'desc').limit(100).get();
   G.log = mealsSnap.docs.map(d => d.data());
   G.lastMealDoc = mealsSnap.docs.length === 100 ? mealsSnap.docs[mealsSnap.docs.length - 1] : null;
+  // weight log
+  try {
+    const wSnap = await userRef.collection('weight').doc('log').get();
+    G.weightLog = wSnap.exists ? (wSnap.data().entries || []) : [];
+  } catch (e) { G.weightLog = []; }
+}
+
+// ════════════════════════════════════════════════════════════
+// WORKOUT PERSISTENCE
+// ════════════════════════════════════════════════════════════
+async function loadWorkout(dateStr) {
+  const ref = db.collection('users').doc(G.user.id).collection('workouts').doc(dateStr);
+  const snap = await ref.get();
+  const exercises = snap.exists ? (snap.data().exercises || []) : [];
+  G.workouts[dateStr] = { exercises };
+  return exercises;
+}
+async function saveWorkout(dateStr, exercises) {
+  await db.collection('users').doc(G.user.id).collection('workouts').doc(dateStr).set({
+    date: dateStr, exercises, updatedAt: new Date().toISOString()
+  });
+}
+async function saveWeightEntry(kg) {
+  G.weightLog.push({ date: TODAY(), kg });
+  await db.collection('users').doc(G.user.id).collection('weight').doc('log').set({ entries: G.weightLog });
 }
 
 async function loadMoreMeals() {
@@ -841,6 +990,8 @@ function switchTab(name) {
   document.getElementById('fabAdd').classList.toggle('visible', name === 'today');
   if (name === 'today') renderToday();
   if (name === 'calendar') renderCalendar();
+  if (name === 'workout') renderWorkout();
+  if (name === 'settings') renderWeightGraph(G.weightRange);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1371,6 +1522,10 @@ function renderSettings() {
   document.getElementById('setApiKey').value = G.settings.apiKey || '';
   document.getElementById('setGroupId').value = G.settings.groupId || '';
   document.getElementById('setForceMinimax').checked = G.settings.forceMinimax || false;
+  const unit = G.settings.weightUnit || 'kg';
+  document.getElementById('weightUnitKg').checked = unit === 'kg';
+  document.getElementById('weightUnitLbs').checked = unit === 'lbs';
+  renderWeightGraph(G.weightRange);
 }
 
 async function saveSettings() {
@@ -1381,6 +1536,7 @@ async function saveSettings() {
   G.settings.apiKey = document.getElementById('setApiKey').value.trim();
   G.settings.groupId = document.getElementById('setGroupId').value.trim();
   G.settings.forceMinimax = document.getElementById('setForceMinimax').checked;
+  G.settings.weightUnit = document.getElementById('weightUnitLbs').checked ? 'lbs' : 'kg';
   const s = document.getElementById('settingsStatus');
   try {
     await saveSettingsStore();
@@ -1460,6 +1616,575 @@ async function saveSettings() {
     }
   }, {passive: true});
 })();
+
+// ════════════════════════════════════════════════════════════
+// WORKOUT
+// ════════════════════════════════════════════════════════════
+const MUSCLE_IDS = [
+  'chest','front_deltoid','side_deltoid','rear_deltoid','biceps','triceps',
+  'forearms','abs','obliques','traps','lats','lower_back','glutes','quads',
+  'hamstrings','hip_flexors','adductors','calves'
+];
+
+function buildMuscleMapSVG() {
+  // Two figures: front (x-offset 10) and back (x-offset 110). viewBox 200x200.
+  // Minimalist anatomy. All paths get id="muscle-<name>" so we can color them.
+  const stroke = '#333', fill = '#1a1a1a';
+  return `
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="${stroke}" stroke-width="0.5" fill="${fill}">
+    <!-- ============ FRONT FIGURE (x≈10..90) ============ -->
+    <!-- Head -->
+    <ellipse cx="50" cy="12" rx="6" ry="7" fill="#141414"/>
+    <!-- Neck -->
+    <rect x="47.5" y="18" width="5" height="4" fill="#141414"/>
+    <!-- Torso outline -->
+    <path d="M37,24 L63,24 L66,60 L60,80 L40,80 L34,60 Z" fill="#141414"/>
+    <!-- Chest (pecs) -->
+    <path id="muscle-chest" d="M38,26 L50,28 L62,26 L60,40 L50,42 L40,40 Z"/>
+    <!-- Front delts -->
+    <ellipse id="muscle-front_deltoid" cx="34" cy="28" rx="4" ry="5" transform="rotate(-15 34 28)"/>
+    <ellipse id="muscle-front_deltoid-r" cx="66" cy="28" rx="4" ry="5" transform="rotate(15 66 28)"/>
+    <!-- Side delts -->
+    <ellipse id="muscle-side_deltoid" cx="31" cy="32" rx="3" ry="4"/>
+    <ellipse id="muscle-side_deltoid-r" cx="69" cy="32" rx="3" ry="4"/>
+    <!-- Abs -->
+    <path id="muscle-abs" d="M44,43 L56,43 L57,68 L43,68 Z"/>
+    <line x1="50" y1="43" x2="50" y2="68" stroke="${stroke}" stroke-width="0.3"/>
+    <line x1="44" y1="50" x2="56" y2="50" stroke="${stroke}" stroke-width="0.3"/>
+    <line x1="44" y1="57" x2="56" y2="57" stroke="${stroke}" stroke-width="0.3"/>
+    <!-- Obliques -->
+    <path id="muscle-obliques" d="M37,44 L43,46 L43,66 L38,62 Z"/>
+    <path id="muscle-obliques-r" d="M63,44 L57,46 L57,66 L62,62 Z"/>
+    <!-- Arms (upper) -->
+    <path d="M30,33 L26,55 L29,72 L33,55 Z" fill="#141414"/>
+    <path d="M70,33 L74,55 L71,72 L67,55 Z" fill="#141414"/>
+    <!-- Biceps -->
+    <ellipse id="muscle-biceps" cx="29" cy="50" rx="2.5" ry="8"/>
+    <ellipse id="muscle-biceps-r" cx="71" cy="50" rx="2.5" ry="8"/>
+    <!-- Triceps (front view side) -->
+    <ellipse id="muscle-triceps" cx="25" cy="52" rx="1.5" ry="7"/>
+    <ellipse id="muscle-triceps-r" cx="75" cy="52" rx="1.5" ry="7"/>
+    <!-- Forearms -->
+    <path id="muscle-forearms" d="M28,73 L26,92 L31,92 L32,73 Z"/>
+    <path id="muscle-forearms-r" d="M72,73 L74,92 L69,92 L68,73 Z"/>
+    <!-- Hip flexors -->
+    <path id="muscle-hip_flexors" d="M42,78 L48,82 L48,90 L42,88 Z"/>
+    <path id="muscle-hip_flexors-r" d="M58,78 L52,82 L52,90 L58,88 Z"/>
+    <!-- Quads -->
+    <path id="muscle-quads" d="M40,86 L48,86 L47,128 L40,128 Z"/>
+    <path id="muscle-quads-r" d="M60,86 L52,86 L53,128 L60,128 Z"/>
+    <!-- Adductors (inner thigh) -->
+    <path id="muscle-adductors" d="M48,88 L50,88 L50,118 L48,118 Z"/>
+    <path id="muscle-adductors-r" d="M52,88 L50,88 L50,118 L52,118 Z"/>
+    <!-- Knees -->
+    <ellipse cx="44" cy="130" rx="4" ry="2" fill="#141414"/>
+    <ellipse cx="56" cy="130" rx="4" ry="2" fill="#141414"/>
+    <!-- Lower legs (calves front = shins, leave as outline only) -->
+    <path d="M41,132 L47,132 L46,165 L42,165 Z" fill="#141414"/>
+    <path d="M53,132 L59,132 L58,165 L54,165 Z" fill="#141414"/>
+    <!-- Feet -->
+    <ellipse cx="43" cy="170" rx="4" ry="3" fill="#141414"/>
+    <ellipse cx="57" cy="170" rx="4" ry="3" fill="#141414"/>
+    <!-- Front label -->
+    <text x="50" y="188" text-anchor="middle" fill="#444" font-size="6" font-family="IBM Plex Mono, monospace" stroke="none">FRONT</text>
+
+    <!-- ============ BACK FIGURE (x≈110..190) ============ -->
+    <!-- Head -->
+    <ellipse cx="150" cy="12" rx="6" ry="7" fill="#141414"/>
+    <!-- Neck -->
+    <rect x="147.5" y="18" width="5" height="4" fill="#141414"/>
+    <!-- Torso outline -->
+    <path d="M137,24 L163,24 L166,60 L160,80 L140,80 L134,60 Z" fill="#141414"/>
+    <!-- Traps -->
+    <path id="muscle-traps" d="M140,24 L150,22 L160,24 L157,38 L150,40 L143,38 Z"/>
+    <!-- Rear delts -->
+    <ellipse id="muscle-rear_deltoid" cx="134" cy="30" rx="4" ry="5"/>
+    <ellipse id="muscle-rear_deltoid-r" cx="166" cy="30" rx="4" ry="5"/>
+    <!-- Lats -->
+    <path id="muscle-lats" d="M138,38 L148,40 L146,62 L138,58 Z"/>
+    <path id="muscle-lats-r" d="M162,38 L152,40 L154,62 L162,58 Z"/>
+    <!-- Mid-back (spine line) -->
+    <line x1="150" y1="38" x2="150" y2="68" stroke="${stroke}" stroke-width="0.3"/>
+    <!-- Lower back -->
+    <path id="muscle-lower_back" d="M144,62 L156,62 L157,74 L143,74 Z"/>
+    <!-- Triceps (back view, more prominent) -->
+    <ellipse id="muscle-triceps-b" cx="129" cy="50" rx="3" ry="8"/>
+    <ellipse id="muscle-triceps-br" cx="171" cy="50" rx="3" ry="8"/>
+    <!-- Forearms back -->
+    <path id="muscle-forearms-b" d="M128,73 L126,92 L131,92 L132,73 Z"/>
+    <path id="muscle-forearms-br" d="M172,73 L174,92 L169,92 L168,73 Z"/>
+    <!-- Arms outline -->
+    <path d="M130,33 L126,55 L129,72 L133,55 Z" fill="#141414"/>
+    <path d="M170,33 L174,55 L171,72 L167,55 Z" fill="#141414"/>
+    <!-- Glutes -->
+    <path id="muscle-glutes" d="M140,76 L150,74 L160,76 L161,90 L150,93 L139,90 Z"/>
+    <line x1="150" y1="76" x2="150" y2="92" stroke="${stroke}" stroke-width="0.3"/>
+    <!-- Hamstrings -->
+    <path id="muscle-hamstrings" d="M140,93 L148,93 L147,128 L140,128 Z"/>
+    <path id="muscle-hamstrings-r" d="M160,93 L152,93 L153,128 L160,128 Z"/>
+    <!-- Knees -->
+    <ellipse cx="144" cy="130" rx="4" ry="2" fill="#141414"/>
+    <ellipse cx="156" cy="130" rx="4" ry="2" fill="#141414"/>
+    <!-- Calves -->
+    <path id="muscle-calves" d="M141,134 L147,134 L146,160 L142,160 Z"/>
+    <path id="muscle-calves-r" d="M153,134 L159,134 L158,160 L154,160 Z"/>
+    <!-- Feet -->
+    <ellipse cx="143" cy="170" rx="4" ry="3" fill="#141414"/>
+    <ellipse cx="157" cy="170" rx="4" ry="3" fill="#141414"/>
+    <!-- Back label -->
+    <text x="150" y="188" text-anchor="middle" fill="#444" font-size="6" font-family="IBM Plex Mono, monospace" stroke="none">BACK</text>
+  </g>
+</svg>`;
+}
+
+function updateMuscleMap(exercises) {
+  const mapEl = document.getElementById('muscleMap');
+  if (!mapEl) return;
+  if (!mapEl.querySelector('svg')) mapEl.innerHTML = buildMuscleMapSVG();
+
+  // Volume = sets × reps × weight_kg per muscle, normalized across session
+  const vol = {};
+  MUSCLE_IDS.forEach(m => vol[m] = 0);
+  (exercises || []).forEach(ex => {
+    if (!ex.muscles) return;
+    ex.muscles.forEach(m => {
+      if (vol[m] === undefined) return;
+      if (ex.distance_km != null) {
+        vol[m] += (ex.distance_km || 0) * 10; // cardio proxy
+      } else if (ex.sets && ex.sets.length) {
+        ex.sets.forEach(s => {
+          const reps = s.reps || (s.duration_sec || s.duration_s || 0) / 5;
+          const wt = s.weight_kg != null ? s.weight_kg : 1;
+          vol[m] += reps * wt;
+        });
+      }
+    });
+  });
+
+  const maxVol = Math.max(...Object.values(vol), 1);
+  MUSCLE_IDS.forEach(m => {
+    const ratio = vol[m] / maxVol;
+    let fill = '#1a1a1a';
+    if (ratio >= 0.7) fill = '#5ab82a';
+    else if (ratio >= 0.35) fill = '#3a7a1a';
+    else if (ratio > 0) fill = '#2a4a1a';
+    mapEl.querySelectorAll('[id^="muscle-' + m + '"]').forEach(el => el.setAttribute('fill', fill));
+  });
+}
+
+function workoutViewDateStr() { return G.workoutViewDate || TODAY(); }
+
+async function renderWorkout() {
+  const dateStr = workoutViewDateStr();
+  const isToday = dateStr === TODAY();
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = yesterday.toISOString().slice(0, 10);
+  const title = isToday ? "Today's Workout"
+    : (dateStr === yStr ? "Yesterday's Workout"
+      : new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'}));
+  document.getElementById('workoutDayTitle').textContent = title;
+
+  let exercises = [];
+  if (G.workouts[dateStr]) {
+    exercises = G.workouts[dateStr].exercises || [];
+  } else {
+    try {
+      exercises = await loadWorkout(dateStr);
+    } catch (e) {
+      console.error('loadWorkout failed', e);
+      exercises = [];
+    }
+  }
+  renderExerciseCards(exercises);
+  updateMuscleMap(exercises);
+}
+
+function fmtWeightDisplay(kg) {
+  const unit = G.settings.weightUnit || 'kg';
+  if (kg == null) return '';
+  if (unit === 'lbs') return `${Math.round(kg * 2.2046 * 10) / 10} lbs`;
+  return `${Math.round(kg * 10) / 10} kg`;
+}
+
+function exType(ex) {
+  if (ex.distance_km != null) return 'cardio';
+  if (!ex.sets || !ex.sets[0]) return 'bodyweight';
+  const s = ex.sets[0];
+  if (s.weight_kg != null) return 'strength';
+  if (s.duration_sec != null || s.duration_s != null) return 'duration';
+  return 'bodyweight';
+}
+
+function renderExerciseCards(exercises) {
+  const list = document.getElementById('workoutExerciseList');
+  if (!exercises || exercises.length === 0) {
+    list.innerHTML = `<div class="workout-empty"><div class="empty-ico">🏋️</div><div class="empty-txt">Log your first exercise below.</div></div>`;
+    return;
+  }
+  list.innerHTML = exercises.map((ex, idx) => {
+    const emoji = esc(ex.emoji || '🏋️');
+    const name = esc(ex.name || 'Exercise');
+    const muscles = (ex.muscles || []).slice(0,3).map(m => esc(m.replace(/_/g,' '))).join(' · ');
+    const type = exType(ex);
+
+    let setsHTML = '';
+    if (type === 'cardio') {
+      const dist = ex.distance_km != null ? `${ex.distance_km} km` : '';
+      const dur = ex.duration_min != null ? `${ex.duration_min} min` : '';
+      setsHTML = `<div class="exercise-set-row"><div class="set-num">Run</div><div class="set-detail">${esc(dist)}${dist && dur ? ' · ' : ''}${esc(dur)}</div></div>`;
+    } else if (ex.sets && ex.sets.length) {
+      setsHTML = ex.sets.map((s, i) => {
+        let detail = '';
+        if (type === 'strength') {
+          detail = `${s.reps || 0} reps @ ${fmtWeightDisplay(s.weight_kg)}`;
+        } else if (type === 'duration') {
+          detail = `${s.duration_sec || s.duration_s || 0}s`;
+        } else {
+          detail = `${s.reps || 0} reps`;
+        }
+        return `<div class="exercise-set-row"><div class="set-num">Set ${i+1}</div><div class="set-detail">${esc(detail)}</div></div>`;
+      }).join('');
+    }
+
+    // inline edit panel
+    let editSetsHTML = '';
+    if (type === 'cardio') {
+      editSetsHTML = `<div class="edit-field-row">
+        <label>Distance (km)<input type="number" step="0.1" value="${ex.distance_km||''}" onchange="updateCardioField(${idx},'distance_km',+this.value)"/></label>
+        <label>Duration (min)<input type="number" step="1" value="${ex.duration_min||''}" onchange="updateCardioField(${idx},'duration_min',+this.value)"/></label>
+      </div>`;
+    } else if (ex.sets && ex.sets.length) {
+      editSetsHTML = ex.sets.map((s, si) => {
+        if (type === 'strength') {
+          const unit = G.settings.weightUnit || 'kg';
+          const dispWt = s.weight_kg != null ? (unit === 'lbs' ? +(s.weight_kg * 2.2046).toFixed(1) : s.weight_kg) : '';
+          return `<div class="edit-set-row">
+            <span class="edit-set-num">Set ${si+1}</span>
+            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)"/></label>
+            <label>${esc(unit)}<input type="number" min="0" step="0.5" value="${dispWt}" onchange="updateSetFieldWeight(${idx},${si},+this.value)"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+          </div>`;
+        } else if (type === 'duration') {
+          return `<div class="edit-set-row">
+            <span class="edit-set-num">Set ${si+1}</span>
+            <label>Sec<input type="number" min="0" value="${s.duration_sec||s.duration_s||0}" onchange="updateSetField(${idx},${si},'duration_sec',+this.value)"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+          </div>`;
+        } else {
+          return `<div class="edit-set-row">
+            <span class="edit-set-num">Set ${si+1}</span>
+            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+          </div>`;
+        }
+      }).join('');
+    }
+
+    return `<div class="exercise-card" data-exidx="${idx}">
+      <div class="exercise-card-header" onclick="toggleExerciseEdit(${idx})">
+        <div class="exercise-emoji">${emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div class="exercise-name">${name}</div>
+          <div class="exercise-muscles">${muscles}</div>
+        </div>
+        <div class="exercise-edit-chevron">›</div>
+      </div>
+      <div class="exercise-sets">${setsHTML}</div>
+      <div class="exercise-edit-panel">
+        ${editSetsHTML}
+        ${type !== 'cardio' ? `<button class="edit-add-set" onclick="addSetInline(${idx})">+ Add Set</button>` : ''}
+        <button class="edit-del-ex" onclick="deleteExerciseInline(${idx})">Delete Exercise</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleExerciseEdit(idx) {
+  const card = document.querySelector(`.exercise-card[data-exidx="${idx}"]`);
+  if (card) card.classList.toggle('edit-open');
+}
+
+function getExercise(exIdx) {
+  const dateStr = workoutViewDateStr();
+  return G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+}
+
+async function _saveInlineWorkout() {
+  const dateStr = workoutViewDateStr();
+  const exercises = (G.workouts[dateStr] && G.workouts[dateStr].exercises) || [];
+  await saveWorkout(dateStr, exercises);
+  updateMuscleMap(exercises);
+}
+
+function updateSetField(exIdx, setIdx, field, val) {
+  const ex = getExercise(exIdx);
+  if (!ex || !ex.sets || !ex.sets[setIdx]) return;
+  ex.sets[setIdx][field] = val;
+  _saveInlineWorkout();
+}
+
+function updateSetFieldWeight(exIdx, setIdx, val) {
+  const unit = G.settings.weightUnit || 'kg';
+  const kg = unit === 'lbs' ? Math.round(val / 2.2046 * 2) / 2 : val;
+  updateSetField(exIdx, setIdx, 'weight_kg', kg);
+}
+
+function updateCardioField(exIdx, field, val) {
+  const ex = getExercise(exIdx);
+  if (!ex) return;
+  ex[field] = val;
+  _saveInlineWorkout();
+}
+
+function deleteSetInline(exIdx, setIdx) {
+  const ex = getExercise(exIdx);
+  if (!ex || !ex.sets) return;
+  ex.sets.splice(setIdx, 1);
+  renderExerciseCards(G.workouts[dateStr].exercises);
+  // re-open edit panel
+  setTimeout(() => toggleExerciseEdit(exIdx), 0);
+  _saveInlineWorkout();
+}
+
+function addSetInline(exIdx) {
+  const ex = getExercise(exIdx);
+  if (!ex || !ex.sets) return;
+  const last = ex.sets[ex.sets.length - 1];
+  ex.sets.push(last ? {...last} : {reps: 0, weight_kg: null});
+  renderExerciseCards(G.workouts[dateStr].exercises);
+  setTimeout(() => toggleExerciseEdit(exIdx), 0);
+  _saveInlineWorkout();
+}
+
+function deleteExerciseInline(exIdx) {
+  const dateStr = workoutViewDateStr();
+  if (!G.workouts[dateStr]) return;
+  G.workouts[dateStr].exercises.splice(exIdx, 1);
+  renderExerciseCards(G.workouts[dateStr].exercises);
+  _saveInlineWorkout();
+}
+
+function setWorkoutStatus(msg, err=false) {
+  const el = document.getElementById('workoutStatus');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'workout-status' + (err ? ' err' : '');
+}
+
+async function sendWorkoutChat() {
+  if (!SYSTEM_PROMPT_WORKOUT) { setWorkoutStatus('Still loading…', true); return; }
+  if (G.workoutLoading) return;
+  const input = document.getElementById('workoutChatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const dateStr = workoutViewDateStr();
+  const currentExercises = (G.workouts[dateStr] && G.workouts[dateStr].exercises) || [];
+
+  const btn = document.getElementById('workoutSendBtn');
+  G.workoutLoading = true;
+  btn.disabled = true;
+  setWorkoutStatus('Logging…');
+
+  const sys = SYSTEM_PROMPT_WORKOUT
+    .replace('{{currentState}}', JSON.stringify(currentExercises))
+    .replace(/\{\{weightUnit\}\}/g, G.settings.weightUnit || 'kg');
+
+  try {
+    const result = await callAI(null, null, '', sys, text);
+    if (!result || !Array.isArray(result.exercises)) {
+      throw new Error('Bad response from AI');
+    }
+    // normalize duration_s → duration_sec
+    result.exercises.forEach(ex => (ex.sets || []).forEach(s => {
+      if (s.duration_s != null && s.duration_sec == null) { s.duration_sec = s.duration_s; delete s.duration_s; }
+    }));
+    G.workouts[dateStr] = { exercises: result.exercises };
+    await saveWorkout(dateStr, result.exercises);
+    input.value = '';
+    setWorkoutStatus('');
+    renderExerciseCards(result.exercises);
+    updateMuscleMap(result.exercises);
+  } catch (e) {
+    setWorkoutStatus('Error: ' + e.message, true);
+  } finally {
+    G.workoutLoading = false;
+    btn.disabled = false;
+  }
+}
+
+function shiftWorkoutDate(delta) {
+  const d = new Date(workoutViewDateStr() + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const str = d.toISOString().slice(0, 10);
+  if (str > TODAY()) return;
+  G.workoutViewDate = (str === TODAY()) ? null : str;
+  renderWorkout();
+}
+
+// Workout chat input enter
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.id === 'workoutChatInput' && e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendWorkoutChat();
+  }
+});
+
+// Swipe handler for workout panel
+(function() {
+  const panel = document.getElementById('panel-workout');
+  const slide = document.getElementById('workoutSlide');
+  if (!panel || !slide) return;
+  const EASE = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)';
+  let sx = 0, sy = 0, tracking = false, animating = false;
+
+  function snapBack() {
+    slide.style.transition = EASE;
+    slide.style.transform = '';
+    slide.addEventListener('transitionend', () => { slide.style.transition = ''; }, {once: true});
+  }
+  function commitSwipe(delta, W, dir) {
+    animating = true;
+    const exitX = dir * W;
+    const enterX = -dir * W;
+    slide.style.transition = EASE;
+    slide.style.transform = `translateX(${exitX}px)`;
+    slide.addEventListener('transitionend', () => {
+      slide.style.transition = 'none';
+      shiftWorkoutDate(delta);
+      slide.style.transform = `translateX(${enterX}px)`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        slide.style.transition = EASE;
+        slide.style.transform = '';
+        slide.addEventListener('transitionend', () => {
+          slide.style.transition = '';
+          animating = false;
+        }, {once: true});
+      }));
+    }, {once: true});
+  }
+
+  panel.addEventListener('touchstart', e => {
+    if (animating) return;
+    // ignore swipes starting on input
+    if (e.target.closest && e.target.closest('.workout-chat-bar')) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    tracking = true; slide.style.transition = 'none';
+  }, {passive: true});
+
+  panel.addEventListener('touchmove', e => {
+    if (!tracking) return;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    if (Math.abs(dy) > Math.abs(dx)) { tracking = false; snapBack(); return; }
+    const resistedDx = dx < 0 && !G.workoutViewDate ? dx * 0.15 : dx;
+    slide.style.transform = `translateX(${resistedDx}px)`;
+  }, {passive: true});
+
+  panel.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const W = panel.offsetWidth;
+    const delta = dx > 0 ? -1 : 1;
+    if (dx < 0 && !G.workoutViewDate) { snapBack(); return; }
+    if (Math.abs(dx) > W * 0.25) {
+      commitSwipe(delta, W, dx > 0 ? 1 : -1);
+    } else {
+      snapBack();
+    }
+  }, {passive: true});
+})();
+
+// ════════════════════════════════════════════════════════════
+// WEIGHT TRACKING
+// ════════════════════════════════════════════════════════════
+async function logWeight() {
+  const el = document.getElementById('weightInput');
+  const v = parseFloat(el.value);
+  if (isNaN(v) || v < 20 || v > 600) { alert('Enter a valid weight.'); return; }
+  const unit = G.settings.weightUnit || 'kg';
+  const kg = unit === 'lbs' ? v / 2.2046 : v;
+  try {
+    await saveWeightEntry(Math.round(kg * 10) / 10);
+    el.value = '';
+    renderWeightGraph(G.weightRange);
+  } catch (e) {
+    alert('Failed to log weight: ' + e.message);
+  }
+}
+
+function setWeightRange(btn, days) {
+  G.weightRange = days;
+  document.querySelectorAll('#weightRangeSelector .weight-range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderWeightGraph(days);
+}
+
+function renderWeightGraph(rangeDays) {
+  const row = document.getElementById('weightGraphRow');
+  const graph = document.getElementById('weightGraph');
+  if (!row || !graph) return;
+  const entries = G.weightLog || [];
+  if (entries.length < 1) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  if (entries.length < 2) {
+    graph.innerHTML = `<div style="font-size:10px;color:var(--mid);padding:8px 0">Log at least 2 entries to see graph.</div>`;
+    return;
+  }
+  const cutoff = rangeDays > 0 ? new Date(Date.now() - rangeDays * 86400000).toISOString().slice(0,10) : '0000-00-00';
+  const data = entries.filter(e => e.date >= cutoff).sort((a,b) => a.date.localeCompare(b.date));
+  if (data.length < 2) {
+    graph.innerHTML = `<div style="font-size:10px;color:var(--mid);padding:8px 0">Not enough data in this range.</div>`;
+    return;
+  }
+  const unit = G.settings.weightUnit || 'kg';
+  const conv = v => unit === 'lbs' ? v * 2.2046 : v;
+  const ys = data.map(d => conv(d.kg));
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const pad = (maxY - minY) * 0.1 || 1;
+  const yMin = minY - pad, yMax = maxY + pad;
+  const W = 300, H = 120, PADL = 28, PADR = 10, PADT = 10, PADB = 18;
+  const innerW = W - PADL - PADR, innerH = H - PADT - PADB;
+  const xAt = i => PADL + (i / (data.length - 1)) * innerW;
+  const yAt = v => PADT + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+
+  const linePts = data.map((d, i) => `${xAt(i)},${yAt(conv(d.kg))}`).join(' ');
+  const dots = data.map((d, i) => `<circle cx="${xAt(i)}" cy="${yAt(conv(d.kg))}" r="2" fill="#d4f54e"/>`).join('');
+
+  // Linear regression for trend
+  const n = data.length;
+  const xs = data.map((_, i) => i);
+  const meanX = xs.reduce((a,b)=>a+b,0) / n;
+  const meanY = ys.reduce((a,b)=>a+b,0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) { num += (xs[i] - meanX) * (ys[i] - meanY); den += (xs[i] - meanX) ** 2; }
+  const slope = den === 0 ? 0 : num / den;
+  const intercept = meanY - slope * meanX;
+  const tx1 = xAt(0), ty1 = yAt(intercept);
+  const tx2 = xAt(n - 1), ty2 = yAt(intercept + slope * (n - 1));
+
+  const current = Math.round(conv(data[data.length - 1].kg) * 10) / 10;
+  const first = data[0].date, last = data[data.length - 1].date;
+
+  graph.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <div style="font-size:9px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase">Current</div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--lime)">${current} ${unit}</div>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="120" style="display:block">
+      <line x1="${PADL}" y1="${yAt(yMin)}" x2="${W-PADR}" y2="${yAt(yMin)}" stroke="#2c2c2c" stroke-width="0.5"/>
+      <line x1="${PADL}" y1="${yAt(yMax)}" x2="${W-PADR}" y2="${yAt(yMax)}" stroke="#2c2c2c" stroke-width="0.5"/>
+      <text x="${PADL-4}" y="${yAt(yMax)+3}" fill="#888" font-size="8" font-family="IBM Plex Mono, monospace" text-anchor="end">${Math.round(yMax*10)/10}</text>
+      <text x="${PADL-4}" y="${yAt(yMin)+3}" fill="#888" font-size="8" font-family="IBM Plex Mono, monospace" text-anchor="end">${Math.round(yMin*10)/10}</text>
+      <line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="#d4f54e" stroke-opacity="0.35" stroke-width="1" stroke-dasharray="3,3"/>
+      <polyline points="${linePts}" fill="none" stroke="#d4f54e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+      <text x="${PADL}" y="${H-4}" fill="#666" font-size="7" font-family="IBM Plex Mono, monospace">${first}</text>
+      <text x="${W-PADR}" y="${H-4}" fill="#666" font-size="7" font-family="IBM Plex Mono, monospace" text-anchor="end">${last}</text>
+    </svg>`;
+}
 
 </script>
 </body>
