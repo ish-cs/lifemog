@@ -727,6 +727,7 @@ auth.onAuthStateChanged(async (user) => {
       renderSettings();
       renderToday();
       renderCalendar();
+      document.getElementById('fabAdd').classList.add('visible');
     } catch (e) {
       console.error('Failed to load user data:', e);
       loading.style.display = 'none';
