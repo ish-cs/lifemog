@@ -819,6 +819,7 @@ const db = firebase.firestore();
 let G = {
   user: null,       // { id, name, email, picture }
   settings: {},     // { calorieGoal, proteinGoal, apiKey, groupId }
+  goalHistory: [],  // [{ date, calorieGoal, proteinGoal }] — sorted asc, one entry per goal change
   log: [],          // array of meal entries
   analyzing: false,
   lastMealDoc: null,
@@ -928,8 +929,10 @@ async function loadUserData() {
       forceMinimax: d.forceMinimax || false,
       weightUnit: d.weightUnit || 'kg',
     };
+    G.goalHistory = d.goalHistory || [];
   } else {
     G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '', forceMinimax: false, weightUnit: 'kg' };
+    G.goalHistory = [];
     await userRef.set(G.settings);
   }
   const mealsSnap = await userRef.collection('meals').orderBy('ts', 'desc').limit(100).get();
@@ -1000,7 +1003,16 @@ async function removeMealFromDB(mealId) {
 }
 
 async function saveSettingsStore() {
-  await db.collection('users').doc(G.user.id).set(G.settings, { merge: true });
+  await db.collection('users').doc(G.user.id).set({ ...G.settings, goalHistory: G.goalHistory }, { merge: true });
+}
+
+// Returns the calorie/protein goals that were active on a given date
+function getGoalForDate(dateStr) {
+  const entry = [...G.goalHistory].reverse().find(e => e.date <= dateStr);
+  return {
+    calorieGoal: entry ? entry.calorieGoal : (G.settings.calorieGoal || 2000),
+    proteinGoal: entry ? entry.proteinGoal : (G.settings.proteinGoal || 150),
+  };
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1056,8 +1068,8 @@ function sumMacros(meals) {
 function renderFood() {
   const meals = foodMeals();
   const sums = sumMacros(meals);
-  const goal = G.settings.calorieGoal || 2000;
   const vd = viewDateStr();
+  const { calorieGoal: goal, proteinGoal: pGoal } = getGoalForDate(vd);
   const isToday = vd === TODAY();
   const dayLabel = isToday ? "Today's Meals" : (() => {
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
@@ -1086,7 +1098,6 @@ function renderFood() {
   }
 
   // Macro bars (relative to goal-implied amounts, rough ratios)
-  const pGoal = G.settings.proteinGoal || 150;
   document.getElementById('macroBarP').style.width = Math.min(sums.p / pGoal, 1) * 100 + '%';
   document.getElementById('macroBarC').style.width = Math.min(sums.c / 250, 1) * 100 + '%';
   document.getElementById('macroBarF').style.width = Math.min(sums.f / 80, 1) * 100 + '%';
@@ -1468,7 +1479,6 @@ function renderCalendar() {
   const firstDay = new Date(y, mo, 1).getDay();
   const daysInMonth = new Date(y, mo+1, 0).getDate();
   const todayStr = TODAY();
-  const goal = G.settings.calorieGoal || 2000;
 
   // Build a map of date -> summed calories
   const calMap = {};
@@ -1482,6 +1492,7 @@ function renderCalendar() {
   for (let d=1; d<=daysInMonth; d++) {
     const ds = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const cal = calMap[ds] || 0;
+    const goal = getGoalForDate(ds).calorieGoal;
     const isToday = ds === todayStr;
     const hasCal = cal > 0;
     let cls = 'cal-day';
@@ -1510,7 +1521,7 @@ function calDayClick(dateStr) {
   if (meals.length === 0) { closeDayDetail(); return; }
   G.openDayStr = dateStr;
   const sums = sumMacros(meals);
-  const goal = G.settings.calorieGoal || 2000;
+  const goal = getGoalForDate(dateStr).calorieGoal;
   const dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
 
   document.getElementById('ddDate').textContent = dateLabel;
@@ -1560,8 +1571,14 @@ function renderSettings() {
 async function saveSettings() {
   const cal = parseInt(document.getElementById('setCalGoal').value);
   const pro = parseInt(document.getElementById('setProGoal').value);
-  G.settings.calorieGoal = (!isNaN(cal) && cal >= 500 && cal <= 10000) ? cal : 2000;
-  G.settings.proteinGoal = (!isNaN(pro) && pro >= 0 && pro <= 500) ? pro : 150;
+  const newCal = (!isNaN(cal) && cal >= 500 && cal <= 10000) ? cal : 2000;
+  const newPro = (!isNaN(pro) && pro >= 0 && pro <= 500) ? pro : 150;
+  if (newCal !== G.settings.calorieGoal || newPro !== G.settings.proteinGoal) {
+    G.goalHistory.push({ date: TODAY(), calorieGoal: newCal, proteinGoal: newPro });
+    G.goalHistory.sort((a, b) => a.date.localeCompare(b.date));
+  }
+  G.settings.calorieGoal = newCal;
+  G.settings.proteinGoal = newPro;
   G.settings.apiKey = document.getElementById('setApiKey').value.trim();
   G.settings.groupId = document.getElementById('setGroupId').value.trim();
   G.settings.forceMinimax = document.getElementById('setForceMinimax').checked;
