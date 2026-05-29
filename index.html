@@ -849,7 +849,7 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // demo approach: decode the credential JWT client-side.
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(e => alert('Sign-in failed: ' + e.message));
+  auth.signInWithPopup(provider).catch(e => showToast('Sign-in failed: ' + e.message, 'error'));
 }
 
 auth.onAuthStateChanged(async (user) => {
@@ -869,8 +869,8 @@ auth.onAuthStateChanged(async (user) => {
     } catch (e) {
       console.error('Failed to load user data:', e);
       loading.style.display = 'none';
-      alert('Failed to load your data. Please sign in again.');
-      auth.signOut();
+      showToast('Failed to load your data — signing out', 'error');
+      setTimeout(() => auth.signOut(), 2000);
     }
   } else {
     G.user = null;
@@ -899,11 +899,10 @@ function renderAvatar() {
 }
 
 async function signOut() {
-  if (!confirm('Sign out?')) return;
   try {
     await auth.signOut();
   } catch (e) {
-    alert('Sign-out failed: ' + e.message);
+    showToast('Sign-out failed: ' + e.message, 'error');
   }
 }
 
@@ -964,9 +963,16 @@ async function saveWeightEntry(kg, date) {
 }
 
 async function deleteWeightEntry(date) {
+  const prev = [...G.weightLog];
   G.weightLog = G.weightLog.filter(e => e.date !== date);
-  await db.collection('users').doc(G.user.id).collection('weight').doc('log').set({ entries: G.weightLog });
   renderWeightGraph(G.weightRange);
+  try {
+    await db.collection('users').doc(G.user.id).collection('weight').doc('log').set({ entries: G.weightLog });
+  } catch (e) {
+    G.weightLog = prev;
+    renderWeightGraph(G.weightRange);
+    showToast('Failed to delete entry. Check connection.', 'error');
+  }
 }
 
 async function loadMoreMeals() {
@@ -1240,10 +1246,14 @@ async function doAnalyze() {
     };
     G.log.unshift(meal);
     G.log.sort((a, b) => b.ts.localeCompare(a.ts));
-    await saveMeal(meal);
+    try {
+      await saveMeal(meal);
+    } catch (e) {
+      G.log = G.log.filter(m => m.id !== meal.id);
+      throw new Error('Failed to save meal: ' + e.message);
+    }
     const conf = result.confidence || 0;
     setScanStatus('');
-    clearSlot(0); clearSlot(1);
     document.getElementById('ctxInput').value='';
     G.viewDate = null;
     switchTab('food');
@@ -1259,6 +1269,7 @@ async function doAnalyze() {
     setScanStatus('Error: ' + e.message, true);
   } finally {
     G.analyzing = false;
+    clearSlot(0); clearSlot(1);
     document.getElementById('scanProgress').classList.remove('on');
     document.getElementById('analyzeBtn').disabled = false;
   }
@@ -1394,9 +1405,12 @@ function closeModal() {
 async function saveMealEdit() {
   const tsInput = document.getElementById('modalTimestamp').value;
   if (tsInput) {
-    const newTs = new Date(tsInput).toISOString();
-    G.editingMealData.ts = newTs;
-    G.editingMealData.date = newTs.slice(0, 10);
+    const parsed = new Date(tsInput);
+    if (!isNaN(parsed.getTime()) && parsed <= new Date()) {
+      const newTs = parsed.toISOString();
+      G.editingMealData.ts = newTs;
+      G.editingMealData.date = newTs.slice(0, 10);
+    }
   }
   const idx = G.log.findIndex(m => m.id === G.editingMealId);
   if (idx !== -1) {
@@ -1405,7 +1419,7 @@ async function saveMealEdit() {
     try {
       await saveMeal(G.editingMealData);
     } catch (e) {
-      alert('Failed to save meal. Check connection.');
+      showToast('Failed to save meal. Check connection.', 'error');
       return;
     }
   }
@@ -1418,11 +1432,13 @@ async function saveMealEdit() {
 async function deleteMeal() {
   if (!confirm('Delete this meal?')) return;
   const idToDelete = G.editingMealId;
+  const prev = [...G.log];
   G.log = G.log.filter(m => m.id !== idToDelete);
   try {
     await removeMealFromDB(idToDelete);
   } catch (e) {
-    alert('Failed to delete meal. Check connection.');
+    G.log = prev;
+    showToast('Failed to delete meal. Check connection.', 'error');
     return;
   }
   closeModal();
@@ -2243,7 +2259,7 @@ async function logWeight() {
     el.value = '';
     renderWeightGraph(G.weightRange);
   } catch (e) {
-    alert('Failed to log weight: ' + e.message);
+    showToast('Failed to log weight. Check connection.', 'error');
   }
 }
 
