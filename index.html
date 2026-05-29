@@ -1644,11 +1644,10 @@ function buildMuscleMapSVG() {
     <path id="muscle-chest" d="M38,26 L50,28 L62,26 L60,40 L50,42 L40,40 Z"/>
     <!-- Front delts -->
     <ellipse id="muscle-front_deltoid" cx="34" cy="28" rx="4" ry="5" transform="rotate(-15 34 28)"/>
-    <ellipse cx="66" cy="28" rx="4" ry="5" transform="rotate(15 66 28)" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
-    <!-- (mirror right front delt shares id via group below) -->
+    <ellipse id="muscle-front_deltoid-r" cx="66" cy="28" rx="4" ry="5" transform="rotate(15 66 28)"/>
     <!-- Side delts -->
     <ellipse id="muscle-side_deltoid" cx="31" cy="32" rx="3" ry="4"/>
-    <ellipse cx="69" cy="32" rx="3" ry="4" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <ellipse id="muscle-side_deltoid-r" cx="69" cy="32" rx="3" ry="4"/>
     <!-- Abs -->
     <path id="muscle-abs" d="M44,43 L56,43 L57,68 L43,68 Z"/>
     <line x1="50" y1="43" x2="50" y2="68" stroke="${stroke}" stroke-width="0.3"/>
@@ -1656,28 +1655,28 @@ function buildMuscleMapSVG() {
     <line x1="44" y1="57" x2="56" y2="57" stroke="${stroke}" stroke-width="0.3"/>
     <!-- Obliques -->
     <path id="muscle-obliques" d="M37,44 L43,46 L43,66 L38,62 Z"/>
-    <path d="M63,44 L57,46 L57,66 L62,62 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-obliques-r" d="M63,44 L57,46 L57,66 L62,62 Z"/>
     <!-- Arms (upper) -->
     <path d="M30,33 L26,55 L29,72 L33,55 Z" fill="#141414"/>
     <path d="M70,33 L74,55 L71,72 L67,55 Z" fill="#141414"/>
     <!-- Biceps -->
     <ellipse id="muscle-biceps" cx="29" cy="50" rx="2.5" ry="8"/>
-    <ellipse cx="71" cy="50" rx="2.5" ry="8" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <ellipse id="muscle-biceps-r" cx="71" cy="50" rx="2.5" ry="8"/>
     <!-- Triceps (front view side) -->
     <ellipse id="muscle-triceps" cx="25" cy="52" rx="1.5" ry="7"/>
-    <ellipse cx="75" cy="52" rx="1.5" ry="7" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <ellipse id="muscle-triceps-r" cx="75" cy="52" rx="1.5" ry="7"/>
     <!-- Forearms -->
     <path id="muscle-forearms" d="M28,73 L26,92 L31,92 L32,73 Z"/>
-    <path d="M72,73 L74,92 L69,92 L68,73 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-forearms-r" d="M72,73 L74,92 L69,92 L68,73 Z"/>
     <!-- Hip flexors -->
     <path id="muscle-hip_flexors" d="M42,78 L48,82 L48,90 L42,88 Z"/>
-    <path d="M58,78 L52,82 L52,90 L58,88 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-hip_flexors-r" d="M58,78 L52,82 L52,90 L58,88 Z"/>
     <!-- Quads -->
     <path id="muscle-quads" d="M40,86 L48,86 L47,128 L40,128 Z"/>
-    <path d="M60,86 L52,86 L53,128 L60,128 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-quads-r" d="M60,86 L52,86 L53,128 L60,128 Z"/>
     <!-- Adductors (inner thigh) -->
     <path id="muscle-adductors" d="M48,88 L50,88 L50,118 L48,118 Z"/>
-    <path d="M52,88 L50,88 L50,118 L52,118 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-adductors-r" d="M52,88 L50,88 L50,118 L52,118 Z"/>
     <!-- Knees -->
     <ellipse cx="44" cy="130" rx="4" ry="2" fill="#141414"/>
     <ellipse cx="56" cy="130" rx="4" ry="2" fill="#141414"/>
@@ -1701,20 +1700,20 @@ function buildMuscleMapSVG() {
     <path id="muscle-traps" d="M140,24 L150,22 L160,24 L157,38 L150,40 L143,38 Z"/>
     <!-- Rear delts -->
     <ellipse id="muscle-rear_deltoid" cx="134" cy="30" rx="4" ry="5"/>
-    <ellipse cx="166" cy="30" rx="4" ry="5" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <ellipse id="muscle-rear_deltoid-r" cx="166" cy="30" rx="4" ry="5"/>
     <!-- Lats -->
     <path id="muscle-lats" d="M138,38 L148,40 L146,62 L138,58 Z"/>
-    <path d="M162,38 L152,40 L154,62 L162,58 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-lats-r" d="M162,38 L152,40 L154,62 L162,58 Z"/>
     <!-- Mid-back (spine line) -->
     <line x1="150" y1="38" x2="150" y2="68" stroke="${stroke}" stroke-width="0.3"/>
     <!-- Lower back -->
     <path id="muscle-lower_back" d="M144,62 L156,62 L157,74 L143,74 Z"/>
     <!-- Triceps (back view, more prominent) -->
-    <ellipse cx="129" cy="50" rx="3" ry="8" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
-    <ellipse cx="171" cy="50" rx="3" ry="8" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <ellipse id="muscle-triceps-b" cx="129" cy="50" rx="3" ry="8"/>
+    <ellipse id="muscle-triceps-br" cx="171" cy="50" rx="3" ry="8"/>
     <!-- Forearms back -->
-    <path d="M128,73 L126,92 L131,92 L132,73 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
-    <path d="M172,73 L174,92 L169,92 L168,73 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-forearms-b" d="M128,73 L126,92 L131,92 L132,73 Z"/>
+    <path id="muscle-forearms-br" d="M172,73 L174,92 L169,92 L168,73 Z"/>
     <!-- Arms outline -->
     <path d="M130,33 L126,55 L129,72 L133,55 Z" fill="#141414"/>
     <path d="M170,33 L174,55 L171,72 L167,55 Z" fill="#141414"/>
@@ -1723,13 +1722,13 @@ function buildMuscleMapSVG() {
     <line x1="150" y1="76" x2="150" y2="92" stroke="${stroke}" stroke-width="0.3"/>
     <!-- Hamstrings -->
     <path id="muscle-hamstrings" d="M140,93 L148,93 L147,128 L140,128 Z"/>
-    <path d="M160,93 L152,93 L153,128 L160,128 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-hamstrings-r" d="M160,93 L152,93 L153,128 L160,128 Z"/>
     <!-- Knees -->
     <ellipse cx="144" cy="130" rx="4" ry="2" fill="#141414"/>
     <ellipse cx="156" cy="130" rx="4" ry="2" fill="#141414"/>
     <!-- Calves -->
     <path id="muscle-calves" d="M141,134 L147,134 L146,160 L142,160 Z"/>
-    <path d="M153,134 L159,134 L158,160 L154,160 Z" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+    <path id="muscle-calves-r" d="M153,134 L159,134 L158,160 L154,160 Z"/>
     <!-- Feet -->
     <ellipse cx="143" cy="170" rx="4" ry="3" fill="#141414"/>
     <ellipse cx="157" cy="170" rx="4" ry="3" fill="#141414"/>
@@ -1765,14 +1764,12 @@ function updateMuscleMap(exercises) {
 
   const maxVol = Math.max(...Object.values(vol), 1);
   MUSCLE_IDS.forEach(m => {
-    const el = mapEl.querySelector('#muscle-' + m);
-    if (!el) return;
     const ratio = vol[m] / maxVol;
     let fill = '#1a1a1a';
     if (ratio >= 0.7) fill = '#5ab82a';
     else if (ratio >= 0.35) fill = '#3a7a1a';
     else if (ratio > 0) fill = '#2a4a1a';
-    el.setAttribute('fill', fill);
+    mapEl.querySelectorAll('[id^="muscle-' + m + '"]').forEach(el => el.setAttribute('fill', fill));
   });
 }
 
@@ -1787,10 +1784,6 @@ async function renderWorkout() {
     : (dateStr === yStr ? "Yesterday's Workout"
       : new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'}));
   document.getElementById('workoutDayTitle').textContent = title;
-
-  // ensure svg
-  const mapEl = document.getElementById('muscleMap');
-  if (mapEl && !mapEl.querySelector('svg')) mapEl.innerHTML = buildMuscleMapSVG();
 
   let exercises = [];
   if (G.workouts[dateStr]) {
@@ -1912,6 +1905,11 @@ function toggleExerciseEdit(idx) {
   if (card) card.classList.toggle('edit-open');
 }
 
+function getExercise(exIdx) {
+  const dateStr = workoutViewDateStr();
+  return G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+}
+
 async function _saveInlineWorkout() {
   const dateStr = workoutViewDateStr();
   const exercises = (G.workouts[dateStr] && G.workouts[dateStr].exercises) || [];
@@ -1920,9 +1918,8 @@ async function _saveInlineWorkout() {
 }
 
 function updateSetField(exIdx, setIdx, field, val) {
-  const dateStr = workoutViewDateStr();
-  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
-  if (!ex || !ex.sets[setIdx]) return;
+  const ex = getExercise(exIdx);
+  if (!ex || !ex.sets || !ex.sets[setIdx]) return;
   ex.sets[setIdx][field] = val;
   _saveInlineWorkout();
 }
@@ -1934,17 +1931,15 @@ function updateSetFieldWeight(exIdx, setIdx, val) {
 }
 
 function updateCardioField(exIdx, field, val) {
-  const dateStr = workoutViewDateStr();
-  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+  const ex = getExercise(exIdx);
   if (!ex) return;
   ex[field] = val;
   _saveInlineWorkout();
 }
 
 function deleteSetInline(exIdx, setIdx) {
-  const dateStr = workoutViewDateStr();
-  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
-  if (!ex) return;
+  const ex = getExercise(exIdx);
+  if (!ex || !ex.sets) return;
   ex.sets.splice(setIdx, 1);
   renderExerciseCards(G.workouts[dateStr].exercises);
   // re-open edit panel
@@ -1953,8 +1948,7 @@ function deleteSetInline(exIdx, setIdx) {
 }
 
 function addSetInline(exIdx) {
-  const dateStr = workoutViewDateStr();
-  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+  const ex = getExercise(exIdx);
   if (!ex || !ex.sets) return;
   const last = ex.sets[ex.sets.length - 1];
   ex.sets.push(last ? {...last} : {reps: 0, weight_kg: null});
@@ -2002,6 +1996,10 @@ async function sendWorkoutChat() {
     if (!result || !Array.isArray(result.exercises)) {
       throw new Error('Bad response from AI');
     }
+    // normalize duration_s → duration_sec
+    result.exercises.forEach(ex => (ex.sets || []).forEach(s => {
+      if (s.duration_s != null && s.duration_sec == null) { s.duration_sec = s.duration_s; delete s.duration_s; }
+    }));
     G.workouts[dateStr] = { exercises: result.exercises };
     await saveWorkout(dateStr, result.exercises);
     input.value = '';
