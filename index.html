@@ -144,7 +144,6 @@ html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',mon
   position:relative;overflow:hidden;
 }
 .macro-pill::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--pill-color,var(--border))}
-.macro-pill.k{--pill-color:#4ef5c8}
 .macro-pill.p{--pill-color:#60a8f0}
 .macro-pill.c{--pill-color:#f0c04e}
 .macro-pill.f{--pill-color:#f07860}
@@ -565,11 +564,6 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
           </div>
         </div>
         <div class="macro-strip">
-          <div class="macro-pill k">
-            <div class="mpill-val" id="foodKcal">0</div>
-            <div class="mpill-label">Calories</div>
-            <div class="mpill-unit">kcal</div>
-          </div>
           <div class="macro-pill p">
             <div class="mpill-val" id="foodP">0</div>
             <div class="mpill-label">Protein</div>
@@ -1102,8 +1096,7 @@ function renderFood() {
   document.getElementById('macroBarC').style.width = Math.min(sums.c / 250, 1) * 100 + '%';
   document.getElementById('macroBarF').style.width = Math.min(sums.f / 80, 1) * 100 + '%';
 
-  document.getElementById('foodKcal').textContent = Math.round(sums.cal);
-  document.getElementById('foodP').textContent = Math.round(sums.p);
+    document.getElementById('foodP').textContent = Math.round(sums.p);
   document.getElementById('foodC').textContent = Math.round(sums.c);
   document.getElementById('foodF').textContent = Math.round(sums.f);
 
