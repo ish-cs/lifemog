@@ -408,7 +408,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 #fileInput{display:none}
 
 /* ── WORKOUT PANEL ── */
-#panel-workout{overflow-x:hidden;padding-bottom:0}
+#panel-workout{overflow-x:hidden;padding-bottom:0;position:relative}
 #workoutSlide{will-change:transform;padding-bottom:calc(80px + var(--safe-b))}
 .workout-header{padding:20px;display:flex;align-items:center;justify-content:center}
 .workout-day-title{font-size:10px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase}
@@ -417,11 +417,12 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 #muscleMap{padding:0 20px 16px;display:flex;justify-content:center}
 #muscleMap svg{width:100%;max-width:320px;height:auto}
 .workout-chat-bar{
-  position:sticky;bottom:0;left:0;right:0;
+  position:fixed;bottom:0;left:0;right:0;
   padding:10px 16px calc(10px + var(--safe-b));
   background:var(--bg);border-top:1px solid var(--border);
-  display:flex;gap:8px;z-index:10;
+  display:none;gap:8px;z-index:10;
 }
+#panel-workout.active .workout-chat-bar{display:flex}
 #workoutChatInput{
   flex:1;background:var(--s1);border:1.5px solid var(--border);border-radius:20px;
   color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;
