@@ -467,8 +467,9 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 .set-num{font-size:9px;color:var(--dim);width:36px;letter-spacing:0.08em;text-transform:uppercase}
 .set-detail{font-family:'Playfair Display',serif;color:var(--text);font-size:14px}
 .workout-empty{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
-.workout-status{font-size:10px;color:var(--mid);text-align:center;min-height:14px;padding:0 16px 8px}
+.workout-status{font-size:10px;color:var(--mid);text-align:center;min-height:14px;padding:0 16px 8px;display:flex;align-items:center;justify-content:center;gap:10px}
 .workout-status.err{color:var(--red)}
+.undo-btn{font-size:10px;color:var(--lime);background:none;border:1px solid var(--lime);border-radius:6px;padding:2px 8px;cursor:pointer;letter-spacing:0.06em;flex-shrink:0}
 
 /* weight log buttons */
 .weight-range-btn{
@@ -2003,6 +2004,29 @@ function setWorkoutStatus(msg, err=false) {
   el.className = 'workout-status' + (err ? ' err' : '');
 }
 
+let _undoTimer = null;
+function showWorkoutUndo(dateStr, prevExercises) {
+  const el = document.getElementById('workoutStatus');
+  if (!el) return;
+  clearTimeout(_undoTimer);
+  el.className = 'workout-status';
+  const btn = document.createElement('button');
+  btn.className = 'undo-btn';
+  btn.textContent = 'Undo';
+  btn.onclick = async () => {
+    clearTimeout(_undoTimer);
+    G.workouts[dateStr] = { exercises: prevExercises };
+    await saveWorkout(dateStr, prevExercises);
+    renderExerciseCards(prevExercises);
+    updateMuscleMap(prevExercises);
+    el.textContent = '';
+  };
+  el.textContent = '';
+  el.appendChild(document.createTextNode('Logged'));
+  el.appendChild(btn);
+  _undoTimer = setTimeout(() => { el.textContent = ''; }, 6000);
+}
+
 async function sendWorkoutChat() {
   if (!SYSTEM_PROMPT_WORKOUT) { setWorkoutStatus('Still loading…', true); return; }
   if (G.workoutLoading) return;
@@ -2022,6 +2046,8 @@ async function sendWorkoutChat() {
     .replace('{{currentState}}', JSON.stringify(currentExercises))
     .replace(/\{\{weightUnit\}\}/g, G.settings.weightUnit || 'kg');
 
+  const prevExercises = JSON.parse(JSON.stringify(currentExercises));
+
   try {
     const result = await callAI(null, null, '', sys, text, true);
     if (!result || !Array.isArray(result.exercises)) {
@@ -2034,9 +2060,9 @@ async function sendWorkoutChat() {
     G.workouts[dateStr] = { exercises: result.exercises };
     await saveWorkout(dateStr, result.exercises);
     input.value = '';
-    setWorkoutStatus('');
     renderExerciseCards(result.exercises);
     updateMuscleMap(result.exercises);
+    showWorkoutUndo(dateStr, prevExercises);
   } catch (e) {
     setWorkoutStatus('Error: ' + e.message, true);
   } finally {
