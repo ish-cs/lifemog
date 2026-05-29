@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MacroLens">
@@ -177,6 +177,24 @@ html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',mon
 .meal-cal-u{font-size:9px;color:var(--mid)}
 
 /* ── SCAN PANEL ── */
+/* ── FAB ── */
+.fab{
+  position:fixed;bottom:calc(var(--safe-b) + 24px);right:20px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--lime);border:none;color:#000;
+  font-size:28px;line-height:1;cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  display:none;align-items:center;justify-content:center;
+  z-index:100;transition:transform 0.15s;
+}
+.fab:active{transform:scale(0.92)}
+.fab.visible{display:flex}
+
+/* ── SCAN BACK ── */
+.scan-back{padding:12px 20px 0}
+.scan-back button{background:none;border:none;color:var(--mid);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:0}
+.scan-back button:hover{color:var(--fg)}
+
 .scan-wrap{padding:20px;display:flex;flex-direction:column;gap:14px}
 .photo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .slot{
@@ -435,9 +453,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 
   <div class="tabs">
     <button class="tab active" data-tab="today" onclick="switchTab('today')">Today</button>
-    <button class="tab" data-tab="scan" onclick="switchTab('scan')">Scan</button>
     <button class="tab" data-tab="calendar" onclick="switchTab('calendar')">Calendar</button>
-    <button class="tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
   </div>
 
   <div class="scroll">
@@ -487,13 +503,17 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
         </div>
       </div>
       <div class="meals-header">
-        <div class="meals-title">Today's Meals</div>
+        <div class="meals-title" id="mealsDayTitle">Today's Meals</div>
       </div>
       <div id="todayMealsList"></div>
     </div>
 
+    <!-- FAB -->
+    <button class="fab" id="fabAdd" onclick="switchTab('scan')" title="Log meal">+</button>
+
     <!-- SCAN -->
     <div class="panel" id="panel-scan">
+      <div class="scan-back"><button onclick="switchTab('today')">← Back</button></div>
       <div class="scan-wrap">
         <div>
           <div class="field-label">Describe your meal</div>
@@ -538,6 +558,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
             <div class="cal-wd">Sa</div>
           </div>
           <div class="cal-days" id="calDays"></div>
+          <button id="calLoadMore" onclick="loadMoreMeals()" style="display:none;width:100%;margin-top:10px;padding:10px;background:var(--s2);border:1px solid var(--border);border-radius:10px;color:var(--mid);font-size:11px;font-family:'Space Mono',monospace;cursor:pointer;letter-spacing:0.05em">LOAD OLDER DATA</button>
         </div>
         <div class="day-detail" id="dayDetail">
           <div class="dd-header">
@@ -601,6 +622,9 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modalTitle">Edit Meal</div>
+    <div style="text-align:center;margin-bottom:4px">
+      <input type="datetime-local" id="modalTimestamp" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--mid);font-size:11px;font-family:'Space Mono',monospace;padding:4px 8px;outline:none">
+    </div>
     <div class="modal-totals" id="modalTotals"></div>
     <div class="modal-foods" id="modalFoods"></div>
     <div class="edit-nl-box">
@@ -627,11 +651,19 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   </div>
 </div>
 <input type="file" id="fileInput" accept="image/*">
+<div id="toast" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;padding:5px 10px;border-radius:12px;font-size:10px;font-family:'Space Mono',monospace;letter-spacing:0.03em;text-align:center;max-width:88vw;pointer-events:none;transition:opacity 0.3s"></div>
 
 <script>
 // ════════════════════════════════════════════════════════════
 // FIREBASE
 // ════════════════════════════════════════════════════════════
+const PROMPT_FALLBACK = `You are a precise nutrition analyst. Use USDA FoodData Central values. NEVER ask for clarification — always return the JSON estimate immediately. Identify all foods including hidden calories (oils, sauces, condiments). For alcohol: ethanol=7kcal/g. Treat user-specified quantities as exact. When ambiguous, assume higher-calorie preparation. Return ONLY valid JSON: {"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":75}`;
+let SYSTEM_PROMPT = PROMPT_FALLBACK;
+const PROMPT_EDIT_FALLBACK = `You are a nutrition editor. Use USDA FoodData Central values. Current meal (JSON): {{currentData}}. Apply the user's instruction exactly. Treat user-specified quantities as exact. Account for hidden calories in new items. For alcohol: ethanol=7kcal/g. Recompute totals by summing all food items. Return ONLY valid JSON: {"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":80}`;
+let SYSTEM_PROMPT_EDIT = PROMPT_EDIT_FALLBACK;
+fetch('/prompt.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT = t.trim(); }).catch(() => {});
+fetch('/prompt-edit.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT_EDIT = t.trim(); }).catch(() => {});
+
 firebase.initializeApp({
   apiKey: "AIzaSyB45pdSTdV98fmrgeDoQgrkcF-Rg9s1xN4",
   authDomain: "macrolens-app.firebaseapp.com",
@@ -650,6 +682,10 @@ let G = {
   user: null,       // { id, name, email, picture }
   settings: {},     // { calorieGoal, proteinGoal, apiKey, groupId }
   log: [],          // array of meal entries
+  analyzing: false,
+  lastMealDoc: null,
+  openDayStr: null,
+  viewDate: null,   // null = today; YYYY-MM-DD string = browsing past day
   photos: [null,null],
   camStream: null,
   camFacing: 'environment',
@@ -660,7 +696,12 @@ let G = {
   calMonth: new Date().getMonth(),
 };
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
 const TODAY = () => new Date().toISOString().slice(0,10);
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ════════════════════════════════════════════════════════════
 // GOOGLE AUTH
@@ -746,8 +787,25 @@ async function loadUserData() {
     G.settings = { calorieGoal: 2000, proteinGoal: 150, apiKey: '', groupId: '', forceMinimax: false };
     await userRef.set(G.settings);
   }
-  const mealsSnap = await userRef.collection('meals').orderBy('ts', 'desc').get();
+  const mealsSnap = await userRef.collection('meals').orderBy('ts', 'desc').limit(100).get();
   G.log = mealsSnap.docs.map(d => d.data());
+  G.lastMealDoc = mealsSnap.docs.length === 100 ? mealsSnap.docs[mealsSnap.docs.length - 1] : null;
+}
+
+async function loadMoreMeals() {
+  if (!G.lastMealDoc) return;
+  const btn = document.getElementById('calLoadMore');
+  if (btn) { btn.disabled = true; btn.textContent = 'LOADING…'; }
+  try {
+    const userRef = db.collection('users').doc(G.user.id);
+    const snap = await userRef.collection('meals').orderBy('ts', 'desc').startAfter(G.lastMealDoc).limit(100).get();
+    G.log = G.log.concat(snap.docs.map(d => d.data()));
+    G.lastMealDoc = snap.docs.length === 100 ? snap.docs[snap.docs.length - 1] : null;
+    renderToday();
+    renderCalendar();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'LOAD OLDER DATA'; }
+  }
 }
 
 async function saveMeal(meal) {
@@ -769,6 +827,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('fabAdd').classList.toggle('visible', name === 'today');
   if (name === 'today') renderToday();
   if (name === 'calendar') renderCalendar();
 }
@@ -776,8 +835,18 @@ function switchTab(name) {
 // ════════════════════════════════════════════════════════════
 // TODAY
 // ════════════════════════════════════════════════════════════
+function viewDateStr() { return G.viewDate || TODAY(); }
+
 function todayMeals() {
-  return G.log.filter(m => m.date === TODAY());
+  return G.log.filter(m => m.date === viewDateStr());
+}
+
+function shiftViewDate(delta) {
+  const d = new Date(viewDateStr() + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const str = d.toISOString().slice(0, 10);
+  G.viewDate = (str === TODAY()) ? null : str;
+  renderToday();
 }
 
 function dayMeals(dateStr) {
@@ -798,6 +867,15 @@ function renderToday() {
   const meals = todayMeals();
   const sums = sumMacros(meals);
   const goal = G.settings.calorieGoal || 2000;
+  const vd = viewDateStr();
+  const isToday = vd === TODAY();
+  const dayLabel = isToday ? "Today's Meals" : (() => {
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().slice(0, 10);
+    if (vd === yStr) return "Yesterday's Meals";
+    return new Date(vd + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
+  })();
+  document.getElementById('mealsDayTitle').textContent = dayLabel;
 
   // Ring
   const circ = 263.9;
@@ -830,7 +908,7 @@ function renderToday() {
   // Meals list
   const list = document.getElementById('todayMealsList');
   if (meals.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-ico">🍽</div><div class="empty-txt">No meals logged today.<br>Scan a plate to start.</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-ico">🍽</div><div class="empty-txt">${isToday ? 'No meals logged today.<br>Tap + to start.' : 'No meals logged this day.'}</div></div>`;
     return;
   }
   list.innerHTML = meals.map(m => mealCardHTML(m)).join('');
@@ -841,7 +919,7 @@ function mealCardHTML(m) {
   const thumbHTML = m.thumb
     ? `<div class="meal-thumb"><img src="${m.thumb}"></div>`
     : `<div class="meal-thumb">🍽</div>`;
-  const foods = (m.foods || []).map(f => f.name).join(', ') || 'Meal';
+  const foods = esc((m.foods || []).map(f => f.name).join(', ') || 'Meal');
   return `<div class="meal-card" onclick="openMealModal('${m.id}')">
     <div class="meal-card-top">
       ${thumbHTML}
@@ -904,7 +982,7 @@ function closeCam() {
 }
 function flipCam() { G.camFacing = G.camFacing==='environment'?'user':'environment'; openCam(); }
 
-function resizeDataUrl(dataUrl, maxPx, cb) {
+function resizeDataUrl(dataUrl, maxPx, cb, quality=0.92) {
   const img = new Image();
   img.onload = () => {
     const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
@@ -913,7 +991,7 @@ function resizeDataUrl(dataUrl, maxPx, cb) {
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
     c.getContext('2d').drawImage(img, 0, 0, w, h);
-    cb(c.toDataURL('image/jpeg', 0.82));
+    cb(c.toDataURL('image/jpeg', quality));
   };
   img.src = dataUrl;
 }
@@ -933,37 +1011,56 @@ function capPhoto() {
 // ANALYZE
 // ════════════════════════════════════════════════════════════
 async function doAnalyze() {
+  if (G.analyzing) return;
   const ctx = document.getElementById('ctxInput').value.trim();
   const hasPhoto = G.photos[0]||G.photos[1];
   if (!hasPhoto && !ctx) { setScanStatus('Add a photo or describe your meal.', true); return; }
 
+  G.analyzing = true;
   setScanStatus('Analyzing…');
   document.getElementById('scanProgress').classList.add('on');
   document.getElementById('analyzeBtn').disabled = true;
 
   try {
     const result = await callAI(G.photos[0], G.photos[1], ctx);
+    // Generate small thumb (200px, 0.7 quality) to stay well under Firestore's 1MB doc limit
+    const thumbSource = G.photos[0] || G.photos[1];
+    const thumb = await new Promise(resolve => {
+      if (!thumbSource) { resolve(null); return; }
+      resizeDataUrl(thumbSource, 200, t => resolve(t), 0.7);
+    });
     const meal = {
       id: Date.now().toString(),
       date: TODAY(),
       ts: new Date().toISOString(),
-      thumb: G.photos[0] || G.photos[1],
+      thumb,
       foods: result.foods || [],
       totals: result.totals || {},
       hiddenNotes: result.hidden_calories_notes || '',
       confidence: result.confidence || 0,
     };
     G.log.unshift(meal);
+    G.log.sort((a, b) => b.ts.localeCompare(a.ts));
     await saveMeal(meal);
+    const conf = result.confidence || 0;
     setScanStatus('');
-    // Clear slots
     clearSlot(0); clearSlot(1);
     document.getElementById('ctxInput').value='';
+    G.viewDate = null;
     switchTab('today');
     renderToday();
+    // Show toast on today tab so user sees it after tab switch
+    if (conf < 50) {
+      showToast(`⚠ Very low confidence (${conf}%) — tap the meal to review`, 'error');
+    } else if (conf < 70) {
+      showToast(`⚠ Low confidence (${conf}%) — tap the meal to review`, 'warn');
+    } else if (result._provider) {
+      showToast(`Analyzed with ${result._provider}`, 'info');
+    }
   } catch(e) {
     setScanStatus('Error: ' + e.message, true);
   } finally {
+    G.analyzing = false;
     document.getElementById('scanProgress').classList.remove('on');
     document.getElementById('analyzeBtn').disabled = false;
   }
@@ -974,17 +1071,34 @@ function setScanStatus(msg, err=false) {
   el.textContent = msg; el.className = 'status'+(err?' err':'');
 }
 
-async function callAI(p1, p2, ctx, systemOverride, userOverride) {
-  const sys = systemOverride || `Nutrition AI. Return ONLY valid JSON:
-{"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":75}
-Accurate portions. Account for oils/sauces. JSON only.`;
+function showToast(msg, type='info') {
+  const el = document.getElementById('toast');
+  const colors = { info: ['#1a1a1a','#4ef5c8'], warn: ['#2a1a00','#f5904e'], error: ['#2a0000','#f54e4e'] };
+  const [bg, fg] = colors[type] || colors.info;
+  el.style.background = bg;
+  el.style.color = fg;
+  el.style.border = `1px solid ${fg}40`;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, 4000);
+}
 
-  const userText = userOverride || ((!p1&&!p2) ? `User described: "${ctx}". Estimate macros.` : `Analyze this meal.${ctx ? ' Context: '+ctx : ''}`);
+async function callAI(p1, p2, ctx, systemOverride, userOverride) {
+  const sys = systemOverride || SYSTEM_PROMPT;
+
+  const userText = userOverride || ((!p1&&!p2)
+    ? `Estimate macros for this meal: "${ctx}". Return JSON now.`
+    : `Identify every food item visible in the photo(s) and return the nutrition JSON immediately. Do not ask for more information — estimate based on what is visible.${ctx ? ' Additional context: ' + ctx : ''}`);
+
+  const idToken = await firebase.auth().currentUser?.getIdToken();
 
   const res = await fetch('/.netlify/functions/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      idToken,
       systemPrompt: sys,
       userText,
       image1: p1 || null,
@@ -1016,6 +1130,13 @@ function renderModal() {
   const time = new Date(m.ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
   const date = new Date(m.ts).toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric'});
   document.getElementById('modalTitle').textContent = `${date} · ${time}`;
+  // Populate datetime-local input (format: YYYY-MM-DDTHH:MM)
+  const tsLocal = new Date(m.ts);
+  const pad = n => String(n).padStart(2,'0');
+  const localStr = `${tsLocal.getFullYear()}-${pad(tsLocal.getMonth()+1)}-${pad(tsLocal.getDate())}T${pad(tsLocal.getHours())}:${pad(tsLocal.getMinutes())}`;
+  const nowLocal = (() => { const n = new Date(); const pad = x => String(x).padStart(2,'0'); return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}T${pad(n.getHours())}:${pad(n.getMinutes())}`; })();
+  document.getElementById('modalTimestamp').max = nowLocal;
+  document.getElementById('modalTimestamp').value = localStr;
 
   // Totals
   const t = m.totals;
@@ -1029,20 +1150,36 @@ function renderModal() {
   const foods = m.foods || [];
   document.getElementById('modalFoods').innerHTML = foods.map((f,i) => `
     <div class="modal-food-row">
-      <div class="mfr-name">${f.name}</div>
-      <div class="mfr-val" title="portion">${f.portion}</div>
+      <div class="mfr-name">${esc(f.name)}</div>
+      <div class="mfr-val" title="portion">${esc(f.portion)}</div>
       <div class="mfr-val"><span>${Math.round(f.calories||0)}</span><br><span style="font-size:8px;color:var(--dim)">kcal</span></div>
       <div class="mfr-val"><span>${Math.round(f.protein_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">P</span></div>
       <div class="mfr-val"><span>${Math.round(f.carbs_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">C</span></div>
       <div class="mfr-val"><span>${Math.round(f.fat_g||0)}</span><br><span style="font-size:8px;color:var(--dim)">F</span></div>
     </div>`).join('');
 
+  const extras = [];
   if (m.hiddenNotes) {
-    document.getElementById('modalFoods').innerHTML += `
-      <div style="background:var(--s2);border-left:2px solid var(--cyan);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--mid);line-height:1.7;margin-top:2px">
-        <span style="font-size:9px;color:var(--cyan);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px">Hidden Calories</span>
-        ${m.hiddenNotes}
-      </div>`;
+    extras.push(`
+      <div style="background:var(--s2);border-left:2px solid var(--cyan);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--mid);line-height:1.7;margin-top:6px">
+        <span style="font-size:9px;color:var(--cyan);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px">⚠ Hidden Calories</span>
+        ${esc(m.hiddenNotes)}
+      </div>`);
+  }
+  const conf = m.confidence || 0;
+  if (conf < 70) {
+    const col = conf < 50 ? 'var(--red)' : 'var(--orange)';
+    const msg = conf < 50
+      ? 'Very low confidence — meal was unclear. Review and edit the items.'
+      : 'Moderate confidence — photo or description was ambiguous. Tap items to adjust.';
+    extras.push(`
+      <div style="background:var(--s2);border-left:2px solid ${col};border-radius:6px;padding:10px 12px;font-size:11px;color:var(--mid);line-height:1.7;margin-top:6px">
+        <span style="font-size:9px;color:${col};letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px">Confidence ${conf}%</span>
+        ${msg}
+      </div>`);
+  }
+  if (extras.length) {
+    document.getElementById('modalFoods').innerHTML += extras.join('');
   }
 
   document.getElementById('nlInput').value = '';
@@ -1055,9 +1192,16 @@ function closeModal() {
 }
 
 async function saveMealEdit() {
+  const tsInput = document.getElementById('modalTimestamp').value;
+  if (tsInput) {
+    const newTs = new Date(tsInput).toISOString();
+    G.editingMealData.ts = newTs;
+    G.editingMealData.date = newTs.slice(0, 10);
+  }
   const idx = G.log.findIndex(m => m.id === G.editingMealId);
   if (idx !== -1) {
     G.log[idx] = G.editingMealData;
+    G.log.sort((a, b) => b.ts.localeCompare(a.ts));
     try {
       await saveMeal(G.editingMealData);
     } catch (e) {
@@ -1068,6 +1212,7 @@ async function saveMealEdit() {
   closeModal();
   renderToday();
   renderCalendar();
+  if (G.openDayStr) calDayClick(G.openDayStr);
 }
 
 async function deleteMeal() {
@@ -1094,17 +1239,7 @@ async function applyNL() {
 
   const currentData = JSON.stringify(G.editingMealData.foods);
 
-  const sys = `You are a nutrition editor. The user has a meal with these foods (JSON):
-${currentData}
-
-The user wants to modify it. Apply their instruction and return the COMPLETE updated meal as JSON with this structure:
-{
-  "foods": [{"name":"...","portion":"...","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],
-  "totals": {"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},
-  "hidden_calories_notes": "...",
-  "confidence": 80
-}
-Recompute totals from the updated foods list. Return ONLY valid JSON.`;
+  const sys = SYSTEM_PROMPT_EDIT.replace('{{currentData}}', currentData);
 
   try {
     const result = await callAI(null, null, '', sys, `User instruction: "${instruction}"`);
@@ -1172,9 +1307,12 @@ function renderCalendar() {
     </div>`;
   }
   document.getElementById('calDays').innerHTML = html;
+  const loadMoreEl = document.getElementById('calLoadMore');
+  if (loadMoreEl) loadMoreEl.style.display = G.lastMealDoc ? 'block' : 'none';
 }
 
 function calDayClick(dateStr) {
+  G.openDayStr = dateStr;
   const meals = dayMeals(dateStr);
   if (meals.length === 0) { closeDayDetail(); return; }
   const sums = sumMacros(meals);
@@ -1196,7 +1334,7 @@ function calDayClick(dateStr) {
   document.getElementById('ddMeals').innerHTML = remainHTML + meals.map(m => {
     const time = new Date(m.ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
     return `<div class="dd-meal" onclick="openMealModal('${m.id}')">
-      <div><div class="dd-meal-name">${(m.foods||[]).map(f=>f.name).join(', ')||'Meal'}</div>
+      <div><div class="dd-meal-name">${esc((m.foods||[]).map(f=>f.name).join(', ')||'Meal')}</div>
       <div style="font-size:10px;color:var(--mid)">${time}</div></div>
       <div class="dd-meal-cal">${Math.round(m.totals.calories||0)}</div>
     </div>`;
@@ -1206,6 +1344,7 @@ function calDayClick(dateStr) {
 }
 
 function closeDayDetail() {
+  G.openDayStr = null;
   document.getElementById('dayDetail').classList.remove('visible');
 }
 
@@ -1221,8 +1360,10 @@ function renderSettings() {
 }
 
 async function saveSettings() {
-  G.settings.calorieGoal = parseInt(document.getElementById('setCalGoal').value) || 2000;
-  G.settings.proteinGoal = parseInt(document.getElementById('setProGoal').value) || 150;
+  const cal = parseInt(document.getElementById('setCalGoal').value);
+  const pro = parseInt(document.getElementById('setProGoal').value);
+  G.settings.calorieGoal = (!isNaN(cal) && cal >= 500 && cal <= 10000) ? cal : 2000;
+  G.settings.proteinGoal = (!isNaN(pro) && pro >= 0 && pro <= 500) ? pro : 150;
   G.settings.apiKey = document.getElementById('setApiKey').value.trim();
   G.settings.groupId = document.getElementById('setGroupId').value.trim();
   G.settings.forceMinimax = document.getElementById('setForceMinimax').checked;
@@ -1235,6 +1376,27 @@ async function saveSettings() {
   }
   renderToday();
 }
+
+// ════════════════════════════════════════════════════════════
+// SWIPE TO NAVIGATE DAYS
+// ════════════════════════════════════════════════════════════
+(function() {
+  let sx = 0, sy = 0, tracking = false;
+  const panel = document.getElementById('panel-today');
+  panel.addEventListener('touchstart', e => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    tracking = true;
+  }, {passive: true});
+  panel.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    shiftViewDate(dx < 0 ? 1 : -1);
+  }, {passive: true});
+})();
 
 </script>
 </body>
