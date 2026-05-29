@@ -1995,7 +1995,7 @@ async function sendWorkoutChat() {
   try {
     const result = await callAI(null, null, '', sys, text);
     if (!result || !Array.isArray(result.exercises)) {
-      throw new Error('Bad response from AI');
+      throw new Error(result ? 'AI returned unexpected format — try rephrasing' : 'No response from AI — check your connection');
     }
     // normalize duration_s → duration_sec
     result.exercises.forEach(ex => (ex.sets || []).forEach(s => {
