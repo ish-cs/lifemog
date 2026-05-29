@@ -104,6 +104,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',mon
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .panel{display:none;padding-bottom:calc(var(--safe-b) + 20px)}
 .panel.active{display:block}
+#panel-today{overflow:hidden}
+#todaySlide{will-change:transform}
 
 /* ── TODAY PANEL ── */
 .today-hero{
@@ -459,6 +461,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   <div class="scroll">
     <!-- TODAY -->
     <div class="panel active" id="panel-today">
+      <div id="todaySlide">
       <div class="today-hero">
         <div class="ring-row">
           <div class="ring-wrap">
@@ -506,6 +509,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
         <div class="meals-title" id="mealsDayTitle">Today's Meals</div>
       </div>
       <div id="todayMealsList"></div>
+      </div><!-- /todaySlide -->
     </div>
 
     <!-- FAB -->
@@ -1383,20 +1387,69 @@ async function saveSettings() {
 // SWIPE TO NAVIGATE DAYS
 // ════════════════════════════════════════════════════════════
 (function() {
-  let sx = 0, sy = 0, tracking = false;
   const panel = document.getElementById('panel-today');
+  const slide = document.getElementById('todaySlide');
+  const EASE = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)';
+  let sx = 0, sy = 0, tracking = false, animating = false;
+
+  function snapBack() {
+    slide.style.transition = EASE;
+    slide.style.transform = '';
+    slide.addEventListener('transitionend', () => { slide.style.transition = ''; }, {once: true});
+  }
+
+  function commitSwipe(delta, W) {
+    animating = true;
+    const exitX = delta < 0 ? -W : W;
+    const enterX = delta < 0 ? W : -W;
+    slide.style.transition = EASE;
+    slide.style.transform = `translateX(${exitX}px)`;
+    slide.addEventListener('transitionend', () => {
+      slide.style.transition = 'none';
+      shiftViewDate(delta);
+      slide.style.transform = `translateX(${enterX}px)`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        slide.style.transition = EASE;
+        slide.style.transform = '';
+        slide.addEventListener('transitionend', () => {
+          slide.style.transition = '';
+          animating = false;
+        }, {once: true});
+      }));
+    }, {once: true});
+  }
+
   panel.addEventListener('touchstart', e => {
+    if (animating) return;
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
     tracking = true;
+    slide.style.transition = 'none';
   }, {passive: true});
+
+  panel.addEventListener('touchmove', e => {
+    if (!tracking) return;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    if (Math.abs(dy) > Math.abs(dx)) { tracking = false; snapBack(); return; }
+    // Resist swiping into future
+    const resistedDx = dx < 0 && !G.viewDate ? dx * 0.15 : dx;
+    slide.style.transform = `translateX(${resistedDx}px)`;
+  }, {passive: true});
+
   panel.addEventListener('touchend', e => {
     if (!tracking) return;
     tracking = false;
     const dx = e.changedTouches[0].clientX - sx;
-    const dy = e.changedTouches[0].clientY - sy;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    shiftViewDate(dx < 0 ? 1 : -1);
+    const W = panel.offsetWidth;
+    const delta = dx < 0 ? 1 : -1;
+    // Block future
+    if (dx < 0 && !G.viewDate) { snapBack(); return; }
+    if (Math.abs(dx) > W * 0.25) {
+      commitSwipe(delta, W);
+    } else {
+      snapBack();
+    }
   }, {passive: true});
 })();
 
