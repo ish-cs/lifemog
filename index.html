@@ -923,13 +923,17 @@ function renderToday() {
     return;
   }
   list.innerHTML = meals.map(m => mealCardHTML(m)).join('');
+  meals.forEach(m => {
+    const el = list.querySelector(`.meal-thumb-emoji[data-id="${m.id}"]`);
+    if (el) el.textContent = m.emoji || '🍽';
+  });
 }
 
 function mealCardHTML(m) {
   const time = new Date(m.ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
   const thumbHTML = m.thumb
     ? `<div class="meal-thumb"><img src="${m.thumb}"></div>`
-    : `<div class="meal-thumb meal-thumb-emoji">${m.emoji || '🍽'}</div>`;
+    : `<div class="meal-thumb meal-thumb-emoji" data-id="${m.id}"></div>`;
   const foods = esc((m.foods || []).map(f => f.name).join(', ') || 'Meal');
   return `<div class="meal-card" onclick="openMealModal('${m.id}')">
     <div class="meal-card-top">
