@@ -766,7 +766,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
     </div>
     <div class="modal-btn-row">
       <button class="btn-modal-save" onclick="saveMealEdit()" aria-label="Save meal edits">Save</button>
-      <button class="btn-modal-del" onclick="deleteMeal()" aria-label="Delete meal">Delete</button>
+      <button class="btn-modal-del" id="delBtn" onclick="confirmDeleteMeal()" aria-label="Delete meal">Delete</button>
       <button class="btn-modal-close" onclick="closeModal()" aria-label="Cancel editing">Cancel</button>
     </div>
   </div>
@@ -1429,8 +1429,19 @@ async function saveMealEdit() {
   if (G.openDayStr) calDayClick(G.openDayStr);
 }
 
+function confirmDeleteMeal() {
+  const btn = document.getElementById('delBtn');
+  if (btn.dataset.confirming !== 'true') {
+    btn.dataset.confirming = 'true';
+    btn.textContent = 'Sure?';
+    setTimeout(() => { if (btn.dataset.confirming) { btn.dataset.confirming = ''; btn.textContent = 'Delete'; } }, 3000);
+    return;
+  }
+  btn.dataset.confirming = '';
+  deleteMeal();
+}
+
 async function deleteMeal() {
-  if (!confirm('Delete this meal?')) return;
   const idToDelete = G.editingMealId;
   const prev = [...G.log];
   G.log = G.log.filter(m => m.id !== idToDelete);
