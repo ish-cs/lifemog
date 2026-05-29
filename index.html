@@ -1447,7 +1447,7 @@ async function applyNL() {
     renderModal();
     document.getElementById('nlInput').value = '';
   } catch(e) {
-    alert('Error applying edit: ' + e.message);
+    showToast('Could not apply edit — try rephrasing', 'error');
   } finally {
     btn.disabled = false; btn.textContent = 'Apply ↵';
   }
