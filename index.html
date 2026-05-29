@@ -1917,10 +1917,37 @@ async function _saveInlineWorkout() {
   updateMuscleMap(exercises);
 }
 
+function _refreshSetDisplay(exIdx) {
+  const ex = getExercise(exIdx);
+  if (!ex) return;
+  const card = document.querySelector(`.exercise-card[data-exidx="${exIdx}"]`);
+  if (!card) return;
+  const setsEl = card.querySelector('.exercise-sets');
+  if (!setsEl) return;
+  const type = exType(ex);
+  let html = '';
+  if (type === 'cardio') {
+    const dist = ex.distance_km != null ? `${ex.distance_km} km` : '';
+    const dur = ex.duration_min != null ? `${ex.duration_min} min` : '';
+    html = `<div class="exercise-set-row"><div class="set-num">Run</div><div class="set-detail">${esc(dist)}${dist && dur ? ' · ' : ''}${esc(dur)}</div></div>`;
+  } else {
+    html = (ex.sets || []).map((s, i) => {
+      let detail = '';
+      if (type === 'strength') detail = `${s.reps || 0} reps @ ${fmtWeightDisplay(s.weight_kg)}`;
+      else if (type === 'duration') detail = `${s.duration_sec || 0}s`;
+      else detail = `${s.reps || 0} reps`;
+      return `<div class="exercise-set-row"><div class="set-num">Set ${i+1}</div><div class="set-detail">${esc(detail)}</div></div>`;
+    }).join('');
+  }
+  setsEl.innerHTML = html;
+  updateMuscleMap((G.workouts[workoutViewDateStr()] || {}).exercises || []);
+}
+
 function updateSetField(exIdx, setIdx, field, val) {
   const ex = getExercise(exIdx);
   if (!ex || !ex.sets || !ex.sets[setIdx]) return;
   ex.sets[setIdx][field] = val;
+  _refreshSetDisplay(exIdx);
   _saveInlineWorkout();
 }
 
@@ -1934,6 +1961,7 @@ function updateCardioField(exIdx, field, val) {
   const ex = getExercise(exIdx);
   if (!ex) return;
   ex[field] = val;
+  _refreshSetDisplay(exIdx);
   _saveInlineWorkout();
 }
 
