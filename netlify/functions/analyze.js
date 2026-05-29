@@ -7,7 +7,7 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  const { idToken, systemPrompt, userText, image1, image2, minimaxKey, minimaxGroupId, forceMinimax } = body;
+  const { idToken, systemPrompt, userText, image1, image2, minimaxKey, minimaxGroupId, forceMinimax, fast } = body;
 
   // Verify Firebase ID token before doing anything
   if (!idToken) {
@@ -20,19 +20,19 @@ exports.handler = async (event) => {
   }
 
   if (!forceMinimax && process.env.GEMINI_API_KEY) {
+    // fast=true: no images, simple structured output (workout) — disable thinking, lower token budget
+    const fastModel = fast ? 'gemini-2.0-flash' : 'gemini-2.5-flash';
     try {
-      const result = await callGemini('gemini-2.5-flash', systemPrompt, userText, image1, image2);
-      return ok({ ...result, _provider: 'Gemini 2.5 Flash' });
+      const result = await callGemini(fastModel, systemPrompt, userText, image1, image2, fast);
+      return ok({ ...result, _provider: fast ? 'Gemini 2.0 Flash' : 'Gemini 2.5 Flash' });
     } catch (e) {
       if (!e.isRateLimit) return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
-      // rate limited — try Gemini 3.1 Flash Lite
     }
     try {
-      const result = await callGemini('gemini-3.1-flash-lite', systemPrompt, userText, image1, image2);
-      return ok({ ...result, _provider: 'Gemini 3.1 Flash Lite' });
+      const result = await callGemini('gemini-2.0-flash-lite', systemPrompt, userText, image1, image2, fast);
+      return ok({ ...result, _provider: 'Gemini 2.0 Flash Lite' });
     } catch (e) {
       if (!e.isRateLimit) return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
-      // rate limited — fall through to MiniMax
     }
   }
 
@@ -91,11 +91,15 @@ function parseJSON(text) {
   throw new Error(`Could not parse AI response. Raw (first 400 chars): ${text.slice(0, 400)}`);
 }
 
-async function callGemini(model, systemPrompt, userText, image1, image2) {
+async function callGemini(model, systemPrompt, userText, image1, image2, fast) {
   const parts = [];
   if (image1) parts.push({ inlineData: { mimeType: 'image/jpeg', data: image1.split(',')[1] } });
   if (image2) parts.push({ inlineData: { mimeType: 'image/jpeg', data: image2.split(',')[1] } });
   parts.push({ text: userText });
+
+  const generationConfig = fast
+    ? { maxOutputTokens: 1000, temperature: 0 }
+    : { maxOutputTokens: 4000, temperature: 0 };
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -105,7 +109,7 @@ async function callGemini(model, systemPrompt, userText, image1, image2) {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts }],
-        generationConfig: { maxOutputTokens: 4000, temperature: 0 }
+        generationConfig
       })
     }
   );

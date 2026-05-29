@@ -1250,7 +1250,7 @@ function showToast(msg, type='info') {
   el._t = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, 4000);
 }
 
-async function callAI(p1, p2, ctx, systemOverride, userOverride) {
+async function callAI(p1, p2, ctx, systemOverride, userOverride, fast=false) {
   const sys = systemOverride || SYSTEM_PROMPT;
 
   const userText = userOverride || ((!p1&&!p2)
@@ -1271,6 +1271,7 @@ async function callAI(p1, p2, ctx, systemOverride, userOverride) {
       minimaxKey: G.settings.apiKey || '',
       minimaxGroupId: G.settings.groupId || '',
       forceMinimax: G.settings.forceMinimax || false,
+      fast,
     })
   });
   const data = await res.json();
@@ -2022,7 +2023,7 @@ async function sendWorkoutChat() {
     .replace(/\{\{weightUnit\}\}/g, G.settings.weightUnit || 'kg');
 
   try {
-    const result = await callAI(null, null, '', sys, text);
+    const result = await callAI(null, null, '', sys, text, true);
     if (!result || !Array.isArray(result.exercises)) {
       throw new Error(result ? 'AI returned unexpected format — try rephrasing' : 'No response from AI — check your connection');
     }
