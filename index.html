@@ -438,7 +438,20 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   margin:0 20px 10px;background:var(--s1);border:1px solid var(--border);
   border-radius:14px;overflow:hidden;padding:14px;
 }
-.exercise-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.exercise-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer}
+.exercise-edit-chevron{font-size:18px;color:var(--dim);transition:transform 0.2s;flex-shrink:0}
+.exercise-card.edit-open .exercise-edit-chevron{transform:rotate(90deg)}
+.exercise-edit-panel{display:none;padding-top:10px;border-top:1px solid var(--border);margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.exercise-card:not(.edit-open) .exercise-edit-panel{display:none}
+.exercise-card.edit-open .exercise-edit-panel{display:flex}
+.edit-set-row{display:flex;align-items:center;gap:8px;font-size:11px}
+.edit-set-num{font-size:9px;color:var(--dim);width:36px;letter-spacing:0.08em;text-transform:uppercase;flex-shrink:0}
+.edit-set-row label,.edit-field-row label{display:flex;flex-direction:column;font-size:9px;color:var(--dim);letter-spacing:0.06em;text-transform:uppercase;gap:3px}
+.edit-set-row input,.edit-field-row input{background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-size:13px;width:64px;font-family:inherit}
+.edit-field-row{display:flex;gap:12px}
+.edit-del-set{background:none;border:none;color:var(--red,#f55);cursor:pointer;font-size:14px;padding:0 4px;margin-left:auto}
+.edit-add-set{background:var(--s2);border:1px solid var(--border);color:var(--lime);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;letter-spacing:0.06em}
+.edit-del-ex{background:none;border:1px solid var(--red,#f55);color:var(--red,#f55);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;letter-spacing:0.06em}
 .exercise-emoji{
   font-size:24px;width:40px;height:40px;background:var(--s2);border-radius:10px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -1731,25 +1744,34 @@ function updateMuscleMap(exercises) {
   if (!mapEl) return;
   if (!mapEl.querySelector('svg')) mapEl.innerHTML = buildMuscleMapSVG();
 
-  // Count sets per muscle
-  const setCount = {};
-  MUSCLE_IDS.forEach(m => setCount[m] = 0);
+  // Volume = sets × reps × weight_kg per muscle, normalized across session
+  const vol = {};
+  MUSCLE_IDS.forEach(m => vol[m] = 0);
   (exercises || []).forEach(ex => {
-    if (!ex.muscles || !ex.sets) return;
-    const n = ex.sets.length || 0;
+    if (!ex.muscles) return;
     ex.muscles.forEach(m => {
-      if (setCount[m] !== undefined) setCount[m] += n;
+      if (vol[m] === undefined) return;
+      if (ex.distance_km != null) {
+        vol[m] += (ex.distance_km || 0) * 10; // cardio proxy
+      } else if (ex.sets && ex.sets.length) {
+        ex.sets.forEach(s => {
+          const reps = s.reps || (s.duration_sec || s.duration_s || 0) / 5;
+          const wt = s.weight_kg != null ? s.weight_kg : 1;
+          vol[m] += reps * wt;
+        });
+      }
     });
   });
 
+  const maxVol = Math.max(...Object.values(vol), 1);
   MUSCLE_IDS.forEach(m => {
     const el = mapEl.querySelector('#muscle-' + m);
     if (!el) return;
-    const c = setCount[m];
+    const ratio = vol[m] / maxVol;
     let fill = '#1a1a1a';
-    if (c >= 6) fill = '#5ab82a';
-    else if (c >= 3) fill = '#3a7a1a';
-    else if (c >= 1) fill = '#2a4a1a';
+    if (ratio >= 0.7) fill = '#5ab82a';
+    else if (ratio >= 0.35) fill = '#3a7a1a';
+    else if (ratio > 0) fill = '#2a4a1a';
     el.setAttribute('fill', fill);
   });
 }
@@ -1792,36 +1814,39 @@ function fmtWeightDisplay(kg) {
   return `${Math.round(kg * 10) / 10} kg`;
 }
 
+function exType(ex) {
+  if (ex.distance_km != null) return 'cardio';
+  if (!ex.sets || !ex.sets[0]) return 'bodyweight';
+  const s = ex.sets[0];
+  if (s.weight_kg != null) return 'strength';
+  if (s.duration_sec != null || s.duration_s != null) return 'duration';
+  return 'bodyweight';
+}
+
 function renderExerciseCards(exercises) {
   const list = document.getElementById('workoutExerciseList');
   if (!exercises || exercises.length === 0) {
     list.innerHTML = `<div class="workout-empty"><div class="empty-ico">🏋️</div><div class="empty-txt">Log your first exercise below.</div></div>`;
     return;
   }
-  list.innerHTML = exercises.map(ex => {
+  list.innerHTML = exercises.map((ex, idx) => {
     const emoji = esc(ex.emoji || '🏋️');
     const name = esc(ex.name || 'Exercise');
     const muscles = (ex.muscles || []).slice(0,3).map(m => esc(m.replace(/_/g,' '))).join(' · ');
-    const type = ex.type || (ex.sets && ex.sets[0] && ex.sets[0].weight_kg != null ? 'strength'
-      : ex.sets && ex.sets[0] && ex.sets[0].duration_s != null ? 'duration'
-      : ex.distance_km != null || (ex.sets && ex.sets[0] && ex.sets[0].distance_km != null) ? 'cardio'
-      : 'bodyweight');
+    const type = exType(ex);
 
     let setsHTML = '';
     if (type === 'cardio') {
-      // cardio could be top-level or sets[]
-      const c = (ex.sets && ex.sets[0]) ? ex.sets[0] : ex;
-      const dist = c.distance_km != null ? `${c.distance_km} km` : '';
-      const dur = c.duration_min != null ? `${c.duration_min} min` : '';
+      const dist = ex.distance_km != null ? `${ex.distance_km} km` : '';
+      const dur = ex.duration_min != null ? `${ex.duration_min} min` : '';
       setsHTML = `<div class="exercise-set-row"><div class="set-num">Run</div><div class="set-detail">${esc(dist)}${dist && dur ? ' · ' : ''}${esc(dur)}</div></div>`;
     } else if (ex.sets && ex.sets.length) {
       setsHTML = ex.sets.map((s, i) => {
         let detail = '';
-        if (type === 'strength' || s.weight_kg != null) {
+        if (type === 'strength') {
           detail = `${s.reps || 0} reps @ ${fmtWeightDisplay(s.weight_kg)}`;
-        } else if (type === 'duration' || s.duration_s != null || s.duration_sec != null) {
-          const d = s.duration_s || s.duration_sec || 0;
-          detail = `${d}s`;
+        } else if (type === 'duration') {
+          detail = `${s.duration_sec || s.duration_s || 0}s`;
         } else {
           detail = `${s.reps || 0} reps`;
         }
@@ -1829,17 +1854,121 @@ function renderExerciseCards(exercises) {
       }).join('');
     }
 
-    return `<div class="exercise-card">
-      <div class="exercise-card-header">
+    // inline edit panel
+    let editSetsHTML = '';
+    if (type === 'cardio') {
+      editSetsHTML = `<div class="edit-field-row">
+        <label>Distance (km)<input type="number" step="0.1" value="${ex.distance_km||''}" onchange="updateCardioField(${idx},'distance_km',+this.value)"/></label>
+        <label>Duration (min)<input type="number" step="1" value="${ex.duration_min||''}" onchange="updateCardioField(${idx},'duration_min',+this.value)"/></label>
+      </div>`;
+    } else if (ex.sets && ex.sets.length) {
+      editSetsHTML = ex.sets.map((s, si) => {
+        if (type === 'strength') {
+          const unit = G.settings.weightUnit || 'kg';
+          const dispWt = s.weight_kg != null ? (unit === 'lbs' ? +(s.weight_kg * 2.2046).toFixed(1) : s.weight_kg) : '';
+          return `<div class="edit-set-row">
+            <span class="edit-set-num">Set ${si+1}</span>
+            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)"/></label>
+            <label>${esc(unit)}<input type="number" min="0" step="0.5" value="${dispWt}" onchange="updateSetFieldWeight(${idx},${si},+this.value)"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+          </div>`;
+        } else if (type === 'duration') {
+          return `<div class="edit-set-row">
+            <span class="edit-set-num">Set ${si+1}</span>
+            <label>Sec<input type="number" min="0" value="${s.duration_sec||s.duration_s||0}" onchange="updateSetField(${idx},${si},'duration_sec',+this.value)"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+          </div>`;
+        } else {
+          return `<div class="edit-set-row">
+            <span class="edit-set-num">Set ${si+1}</span>
+            <label>Reps<input type="number" min="0" value="${s.reps||0}" onchange="updateSetField(${idx},${si},'reps',+this.value)"/></label>
+            <button class="edit-del-set" onclick="deleteSetInline(${idx},${si})">✕</button>
+          </div>`;
+        }
+      }).join('');
+    }
+
+    return `<div class="exercise-card" data-exidx="${idx}">
+      <div class="exercise-card-header" onclick="toggleExerciseEdit(${idx})">
         <div class="exercise-emoji">${emoji}</div>
         <div style="flex:1;min-width:0">
           <div class="exercise-name">${name}</div>
           <div class="exercise-muscles">${muscles}</div>
         </div>
+        <div class="exercise-edit-chevron">›</div>
       </div>
       <div class="exercise-sets">${setsHTML}</div>
+      <div class="exercise-edit-panel">
+        ${editSetsHTML}
+        ${type !== 'cardio' ? `<button class="edit-add-set" onclick="addSetInline(${idx})">+ Add Set</button>` : ''}
+        <button class="edit-del-ex" onclick="deleteExerciseInline(${idx})">Delete Exercise</button>
+      </div>
     </div>`;
   }).join('');
+}
+
+function toggleExerciseEdit(idx) {
+  const card = document.querySelector(`.exercise-card[data-exidx="${idx}"]`);
+  if (card) card.classList.toggle('edit-open');
+}
+
+async function _saveInlineWorkout() {
+  const dateStr = workoutViewDateStr();
+  const exercises = (G.workouts[dateStr] && G.workouts[dateStr].exercises) || [];
+  await saveWorkout(dateStr, exercises);
+  updateMuscleMap(exercises);
+}
+
+function updateSetField(exIdx, setIdx, field, val) {
+  const dateStr = workoutViewDateStr();
+  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+  if (!ex || !ex.sets[setIdx]) return;
+  ex.sets[setIdx][field] = val;
+  _saveInlineWorkout();
+}
+
+function updateSetFieldWeight(exIdx, setIdx, val) {
+  const unit = G.settings.weightUnit || 'kg';
+  const kg = unit === 'lbs' ? Math.round(val / 2.2046 * 2) / 2 : val;
+  updateSetField(exIdx, setIdx, 'weight_kg', kg);
+}
+
+function updateCardioField(exIdx, field, val) {
+  const dateStr = workoutViewDateStr();
+  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+  if (!ex) return;
+  ex[field] = val;
+  _saveInlineWorkout();
+}
+
+function deleteSetInline(exIdx, setIdx) {
+  const dateStr = workoutViewDateStr();
+  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+  if (!ex) return;
+  ex.sets.splice(setIdx, 1);
+  renderExerciseCards(G.workouts[dateStr].exercises);
+  // re-open edit panel
+  setTimeout(() => toggleExerciseEdit(exIdx), 0);
+  _saveInlineWorkout();
+}
+
+function addSetInline(exIdx) {
+  const dateStr = workoutViewDateStr();
+  const ex = G.workouts[dateStr] && G.workouts[dateStr].exercises && G.workouts[dateStr].exercises[exIdx];
+  if (!ex || !ex.sets) return;
+  const last = ex.sets[ex.sets.length - 1];
+  ex.sets.push(last ? {...last} : {reps: 0, weight_kg: null});
+  renderExerciseCards(G.workouts[dateStr].exercises);
+  setTimeout(() => toggleExerciseEdit(exIdx), 0);
+  _saveInlineWorkout();
+}
+
+function deleteExerciseInline(exIdx) {
+  const dateStr = workoutViewDateStr();
+  if (!G.workouts[dateStr]) return;
+  G.workouts[dateStr].exercises.splice(exIdx, 1);
+  renderExerciseCards(G.workouts[dateStr].exercises);
+  _saveInlineWorkout();
 }
 
 function setWorkoutStatus(msg, err=false) {
