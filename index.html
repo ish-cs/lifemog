@@ -408,7 +408,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 #fileInput{display:none}
 
 /* ── WORKOUT PANEL ── */
-#panel-workout{overflow-x:hidden;padding-bottom:0;position:relative}
+#panel-workout{overflow-x:hidden;padding-bottom:0}
 #workoutSlide{will-change:transform;padding-bottom:calc(80px + var(--safe-b))}
 .workout-header{padding:20px;display:flex;align-items:center;justify-content:center}
 .workout-day-title{font-size:10px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase}
@@ -418,7 +418,8 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 #muscleMap svg{width:100%;max-width:320px;height:auto}
 .workout-chat-bar{
   position:fixed;bottom:0;left:0;right:0;
-  padding:10px 16px calc(10px + var(--safe-b));
+  padding:10px 16px 10px;
+  padding-bottom:max(10px, calc(10px + env(safe-area-inset-bottom)));
   background:var(--bg);border-top:1px solid var(--border);
   display:none;gap:8px;z-index:10;
 }
