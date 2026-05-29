@@ -668,10 +668,8 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
 // ════════════════════════════════════════════════════════════
 // FIREBASE
 // ════════════════════════════════════════════════════════════
-const PROMPT_FALLBACK = `You are a precise nutrition analyst. Use USDA FoodData Central values. NEVER ask for clarification — always return the JSON estimate immediately. Identify all foods including hidden calories (oils, sauces, condiments). For alcohol: ethanol=7kcal/g. Treat user-specified quantities as exact. When ambiguous, assume higher-calorie preparation. Pick a single emoji that best represents the overall meal (e.g. 🍗 for chicken, 🍳 for eggs, 🍝 for pasta, 🍚 for rice, 🥗 for salad, 🍔 for burger, 🥤 for drinks). Return ONLY valid JSON: {"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":75,"emoji":"🍽"}`;
-let SYSTEM_PROMPT = PROMPT_FALLBACK;
-const PROMPT_EDIT_FALLBACK = `You are a nutrition editor. Use USDA FoodData Central values. Current meal (JSON): {{currentData}}. Apply the user's instruction exactly. Treat user-specified quantities as exact. Account for hidden calories in new items. For alcohol: ethanol=7kcal/g. Recompute totals by summing all food items. Return ONLY valid JSON: {"foods":[{"name":"","portion":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0}],"totals":{"calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"fiber_g":0},"hidden_calories_notes":"","confidence":80}`;
-let SYSTEM_PROMPT_EDIT = PROMPT_EDIT_FALLBACK;
+let SYSTEM_PROMPT = '';
+let SYSTEM_PROMPT_EDIT = '';
 fetch('/prompt.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT = t.trim(); }).catch(() => {});
 fetch('/prompt-edit.txt').then(r => r.text()).then(t => { if (t.trim()) SYSTEM_PROMPT_EDIT = t.trim(); }).catch(() => {});
 
