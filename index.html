@@ -454,6 +454,7 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
   </div>
 
   <div class="tabs">
+    <button class="tab" data-tab="workout" onclick="switchTab('workout')">Workout</button>
     <button class="tab active" data-tab="today" onclick="switchTab('today')">Food</button>
     <button class="tab" data-tab="calendar" onclick="switchTab('calendar')">Calendar</button>
   </div>
@@ -510,6 +511,11 @@ textarea::placeholder,input::placeholder{color:var(--dim)}
       </div>
       <div id="todayMealsList"></div>
       </div><!-- /todaySlide -->
+    </div>
+
+    <!-- WORKOUT -->
+    <div class="panel" id="panel-workout">
+      <div class="empty-state" style="margin-top:60px"><div class="empty-ico">🏋️</div><div class="empty-txt">Workout tracking<br>coming soon.</div></div>
     </div>
 
     <!-- FAB -->
