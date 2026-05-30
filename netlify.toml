@@ -1,6 +1,7 @@
 [build]
   functions = "netlify/functions"
   publish = "."
+  command = "cd netlify/functions && npm install"
 
 [functions."notify"]
   schedule = "*/15 * * * *"
