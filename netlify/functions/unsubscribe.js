@@ -9,7 +9,7 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  const { idToken, subscription, timezone, reminders } = body;
+  const { idToken } = body;
 
   if (!idToken) {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
@@ -22,27 +22,8 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized: ' + e.message }) };
   }
 
-  // Validate inputs
-  if (!subscription?.endpoint || !subscription?.keys) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid subscription: missing endpoint or keys' }) };
-  }
-  if (typeof timezone !== 'string') {
-    return { statusCode: 400, body: JSON.stringify({ error: 'timezone must be a string' }) };
-  }
-  if (!Array.isArray(reminders) || reminders.length === 0) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'reminders must be a non-empty array' }) };
-  }
-
-  // Sanitize reminders
-  const sanitized = reminders.map(r => ({
-    id: (typeof r.id === 'string' && r.id) ? r.id : 'r_' + crypto.randomBytes(6).toString('hex'),
-    time: (typeof r.time === 'string' && r.time) ? r.time : '10:00',
-    label: (typeof r.label === 'string') ? r.label.trim().slice(0, 50) : '',
-    lastNotified: r.lastNotified || null,
-  }));
-
   try {
-    await writeSubscription(uid, subscription, timezone, sanitized);
+    await deleteSubscription(uid);
   } catch (e) {
     return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
   }
@@ -93,28 +74,7 @@ async function getServiceAccountToken() {
   return data.access_token;
 }
 
-function encodeReminder(r) {
-  return {
-    mapValue: {
-      fields: {
-        id: { stringValue: r.id },
-        time: { stringValue: r.time },
-        label: { stringValue: r.label },
-        lastNotified: r.lastNotified ? { stringValue: r.lastNotified } : { nullValue: 0 },
-      }
-    }
-  };
-}
-
-function encodeKeys(keys) {
-  const fields = {};
-  for (const [k, v] of Object.entries(keys)) {
-    fields[k] = { stringValue: String(v) };
-  }
-  return { mapValue: { fields } };
-}
-
-async function writeSubscription(uid, subscription, timezone, reminders) {
+async function deleteSubscription(uid) {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   if (!projectId) throw new Error('FIREBASE_PROJECT_ID not configured');
 
@@ -126,18 +86,7 @@ async function writeSubscription(uid, subscription, timezone, reminders) {
   const body = {
     fields: {
       pushSubscription: {
-        mapValue: {
-          fields: {
-            endpoint: { stringValue: subscription.endpoint },
-            keys: encodeKeys(subscription.keys),
-            timezone: { stringValue: timezone },
-            reminders: {
-              arrayValue: {
-                values: reminders.map(encodeReminder),
-              }
-            },
-          }
-        }
+        nullValue: 0
       }
     }
   };
