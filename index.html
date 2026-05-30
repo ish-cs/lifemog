@@ -1513,7 +1513,15 @@ function calShift(dir) {
   renderCalendar();
 }
 
-function renderCalendar() {
+function calCacheKey() {
+  return `${G.calYear}-${G.calMonth}-${G.log.length}-${TODAY()}-${G.lastMealDoc ? '1' : '0'}`;
+}
+
+function renderCalendar(force = false) {
+  const key = calCacheKey();
+  if (!force && G._calCacheKey === key) return;
+  G._calCacheKey = key;
+
   const y = G.calYear, mo = G.calMonth;
   const label = new Date(y, mo, 1).toLocaleDateString('en-US', {month:'long',year:'numeric'});
   document.getElementById('calMonthLabel').textContent = label;
@@ -1522,7 +1530,6 @@ function renderCalendar() {
   const daysInMonth = new Date(y, mo+1, 0).getDate();
   const todayStr = TODAY();
 
-  // Build a map of date -> summed calories
   const calMap = {};
   G.log.forEach(m => {
     if (!calMap[m.date]) calMap[m.date] = 0;
