@@ -7,7 +7,11 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 );
 
-exports.handler = async () => {
+exports.handler = async (event) => {
+  // Allow HTTP POST for manual testing
+  if (event?.httpMethod && event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
   const projectId = process.env.FIREBASE_PROJECT_ID;
   if (!projectId) {
     console.error('FIREBASE_PROJECT_ID not configured');
