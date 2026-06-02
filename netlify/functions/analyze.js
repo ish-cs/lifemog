@@ -93,8 +93,8 @@ function parseJSON(text) {
 
 async function callGemini(model, systemPrompt, userText, image1, image2, fast) {
   const parts = [];
-  if (image1) parts.push({ inlineData: { mimeType: 'image/jpeg', data: image1.split(',')[1] } });
-  if (image2) parts.push({ inlineData: { mimeType: 'image/jpeg', data: image2.split(',')[1] } });
+  if (image1) parts.push({ inlineData: { mimeType: 'image/jpeg', data: image1.includes(',') ? image1.split(',')[1] : image1 } });
+  if (image2) parts.push({ inlineData: { mimeType: 'image/jpeg', data: image2.includes(',') ? image2.split(',')[1] : image2 } });
   parts.push({ text: userText });
 
   const generationConfig = fast
