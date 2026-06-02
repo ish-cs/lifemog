@@ -119,7 +119,7 @@ async function callGemini(model, systemPrompt, userText, image1, image2, fast) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemPrompt }] },
+        ...(systemPrompt ? { system_instruction: { parts: [{ text: systemPrompt }] } } : {}),
         contents: [{ role: 'user', parts }],
         generationConfig
       })
