@@ -19,32 +19,44 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized: ' + e.message }) };
   }
 
+  const hasImages = !!(image1 || image2);
+  console.log(`[analyze] hasImages=${hasImages} image1_len=${image1?.length ?? 0} image2_len=${image2?.length ?? 0} forceMinimax=${forceMinimax} fast=${fast}`);
+
   if (!forceMinimax && process.env.GEMINI_API_KEY) {
-    // fast=true: no images, simple structured output (workout) — disable thinking, lower token budget
     const fastModel = fast ? 'gemini-2.0-flash' : 'gemini-2.5-flash';
+    console.log(`[analyze] trying Gemini ${fastModel}`);
     try {
       const result = await callGemini(fastModel, systemPrompt, userText, image1, image2, fast);
+      console.log(`[analyze] Gemini ${fastModel} succeeded`);
       return ok({ ...result, _provider: fast ? 'Gemini 2.0 Flash' : 'Gemini 2.5 Flash' });
     } catch (e) {
+      console.log(`[analyze] Gemini ${fastModel} failed: isRateLimit=${e.isRateLimit} msg=${e.message}`);
       if (!e.isRateLimit) return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
     }
+    console.log('[analyze] trying Gemini 2.0-flash-lite');
     try {
       const result = await callGemini('gemini-2.0-flash-lite', systemPrompt, userText, image1, image2, fast);
+      console.log('[analyze] Gemini 2.0-flash-lite succeeded');
       return ok({ ...result, _provider: 'Gemini 2.0 Flash Lite' });
     } catch (e) {
+      console.log(`[analyze] Gemini 2.0-flash-lite failed: isRateLimit=${e.isRateLimit} msg=${e.message}`);
       if (!e.isRateLimit) return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
     }
   }
 
   if (!minimaxKey) {
+    console.log('[analyze] no MiniMax key — giving up');
     return { statusCode: 400, body: JSON.stringify({ error: 'Gemini rate limited and no MiniMax key configured. Add a MiniMax key in Settings.' }) };
   }
 
+  console.log(`[analyze] trying MiniMax hasImages=${hasImages}`);
   try {
     const result = await callMiniMax(systemPrompt, userText, image1, image2, minimaxKey, minimaxGroupId);
-    const note = (image1 || image2) ? ' (vision)' : '';
+    const note = hasImages ? ' (vision)' : '';
+    console.log('[analyze] MiniMax succeeded');
     return ok({ ...result, _provider: `MiniMax-Text-01${note}` });
   } catch (e) {
+    console.log(`[analyze] MiniMax failed: ${e.message}`);
     return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
   }
 };
@@ -135,10 +147,11 @@ async function callMiniMax(systemPrompt, userText, image1, image2, apiKey, group
 
   // Build user message content — attempt vision if images provided
   let userContent;
+  const toDataUrl = (b64) => b64.startsWith('data:') ? b64 : `data:image/jpeg;base64,${b64}`;
   if (image1 || image2) {
     userContent = [{ type: 'text', text: userText }];
-    if (image1) userContent.push({ type: 'image_url', image_url: { url: image1 } });
-    if (image2) userContent.push({ type: 'image_url', image_url: { url: image2 } });
+    if (image1) userContent.push({ type: 'image_url', image_url: { url: toDataUrl(image1) } });
+    if (image2) userContent.push({ type: 'image_url', image_url: { url: toDataUrl(image2) } });
   } else {
     userContent = userText;
   }
